@@ -200,6 +200,7 @@ public class LlamaModel implements AutoCloseable {
 	private native byte[] getInfill(String prefix, String suffix, InferenceParameters parameters);
 	private native byte[] decodeBytes(int[] tokens);
 	private native void delete();
+	public native String[] batchComplete(String[] prompts, InferenceParameters parameters);
 
 	/**
 	 * A generated output of the LLM. Note that you have to configure {@link InferenceParameters#setNPredict(int)}

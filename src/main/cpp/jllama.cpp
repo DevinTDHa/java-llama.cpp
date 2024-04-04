@@ -100,7 +100,7 @@ static jfieldID f_lora_adapter = 0;
 static jfieldID f_lora_base = 0;
 static jfieldID f_memory_f16 = 0;
 static jfieldID f_mem_test = 0;
-static jfieldID f_numa = 0;
+//static jfieldID f_numa = 0; // TODO: Disable numa support for now
 static jfieldID f_verbose_prompt = 0;
 // log level
 static jfieldID f_utf_8 = 0;
@@ -250,7 +250,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     f_lora_base = env->GetFieldID(c_model_params, "loraBase", "Ljava/lang/String;");
     f_memory_f16 = env->GetFieldID(c_model_params, "memoryF16", "Z");
     f_mem_test = env->GetFieldID(c_model_params, "memTest", "Z");
-    f_numa = env->GetFieldID(c_model_params, "numa", "I");
+//    f_numa = env->GetFieldID(c_model_params, "numa", "I");
     f_verbose_prompt = env->GetFieldID(c_model_params, "verbosePrompt", "Z");
 
     if (!(f_model_pointer && f_iter_has_next && f_iter_n_generated && f_iter_token_index)) {
@@ -266,7 +266,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
           //          f_rope_freq_base && f_rope_freq_scale && f_mul_mat_q && f_f16_kv && f_logits_all && f_vocab_only &&
           f_rope_freq_base && f_rope_freq_scale && f_f16_kv && f_logits_all && f_vocab_only &&
           f_use_mmap && f_use_mlock && f_embedding && f_lora_adapter && f_lora_base && f_memory_f16 && f_mem_test &&
-          f_numa && f_verbose_prompt)) {
+          //          f_numa && f_verbose_prompt)) {
+          f_verbose_prompt)) {
         goto error;
     }
 
@@ -529,6 +530,9 @@ struct jllama_context {
         }
     }
 
+    /**
+     * Reset the context to the initial state.
+     */
     void rewind() {
         params.antiprompt.clear();
         params.sparams.grammar.clear();
@@ -869,6 +873,8 @@ struct jllama_context {
     }
 };
 
+jllama_context *getModelContext(JNIEnv *env, jobject obj);
+
 static gpt_params parse_model_params(JNIEnv *env, jobject jparams, jstring java_file_path) {
     gpt_params params;
 
@@ -885,7 +891,7 @@ static gpt_params parse_model_params(JNIEnv *env, jobject jparams, jstring java_
     params.embedding = env->GetBooleanField(jparams, f_embedding);
     params.use_mmap = env->GetBooleanField(jparams, f_use_mmap);
     params.use_mlock = env->GetBooleanField(jparams, f_use_mlock);
-    params.numa = (ggml_numa_strategy) env->GetIntField(jparams, f_numa);
+//    params.numa = (ggml_numa_strategy) env->GetIntField(jparams, f_numa);
     params.verbose_prompt = env->GetBooleanField(jparams, f_verbose_prompt);
 
 //    jstring j_lora_adapter = (jstring)env->GetObjectField(jparams, f_lora_adapter);
@@ -1073,8 +1079,7 @@ Java_de_kherud_llama_LlamaModel_loadModel(JNIEnv *env, jobject obj, jstring file
 
 JNIEXPORT void JNICALL
 Java_de_kherud_llama_LlamaModel_newAnswerIterator(JNIEnv *env, jobject obj, jstring prompt, jobject params) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
 //    auto lock = llama->lock();
 
@@ -1091,8 +1096,7 @@ Java_de_kherud_llama_LlamaModel_newAnswerIterator(JNIEnv *env, jobject obj, jstr
 JNIEXPORT void JNICALL
 Java_de_kherud_llama_LlamaModel_newInfillIterator(JNIEnv *env, jobject obj, jstring prefix, jstring suffix,
                                                   jobject params) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
 //    auto lock = llama->lock();
 
@@ -1107,8 +1111,7 @@ Java_de_kherud_llama_LlamaModel_newInfillIterator(JNIEnv *env, jobject obj, jstr
 }
 
 JNIEXPORT jobject JNICALL Java_de_kherud_llama_LlamaModel_getNext(JNIEnv *env, jobject obj, jobject iter) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
     size_t sent_count = env->GetLongField(iter, f_iter_n_generated);
     size_t sent_token_probs_index = env->GetLongField(iter, f_iter_token_index);
@@ -1195,8 +1198,7 @@ Java_de_kherud_llama_LlamaModel_getAnswer(JNIEnv *env, jobject obj, jstring prom
     std::cout << "DEBUG DHA: Received as prompt: " << promptChars << std::endl;
     env->ReleaseStringUTFChars(prompt, promptChars);
 
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
 //	auto lock = llama->lock();
     llama->rewind();
@@ -1233,10 +1235,15 @@ Java_de_kherud_llama_LlamaModel_getAnswer(JNIEnv *env, jobject obj, jstring prom
     return parse_jbytes(env, llama->generated_text);
 }
 
-JNIEXPORT jbyteArray JNICALL
-Java_de_kherud_llama_LlamaModel_getInfill(JNIEnv *env, jobject obj, jstring prefix, jstring suffix, jobject params) {
+jllama_context *getModelContext(JNIEnv *env, jobject obj) {
     jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    auto *llama_ctx = reinterpret_cast<jllama_context *>(llama_handle);
+    return llama_ctx;
+}
+
+jbyteArray JNICALL
+Java_de_kherud_llama_LlamaModel_getInfill(JNIEnv *env, jobject obj, jstring prefix, jstring suffix, jobject params) {
+    jllama_context *llama = getModelContext(env, obj);
 
 //	auto lock = llama->lock();
 
@@ -1275,8 +1282,7 @@ Java_de_kherud_llama_LlamaModel_getInfill(JNIEnv *env, jobject obj, jstring pref
 }
 
 JNIEXPORT jfloatArray JNICALL Java_de_kherud_llama_LlamaModel_embed(JNIEnv *env, jobject obj, jstring java_prompt) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
 //	auto lock = llama->lock();
 
@@ -1304,8 +1310,7 @@ JNIEXPORT jfloatArray JNICALL Java_de_kherud_llama_LlamaModel_embed(JNIEnv *env,
 }
 
 JNIEXPORT jintArray JNICALL Java_de_kherud_llama_LlamaModel_encode(JNIEnv *env, jobject obj, jstring jprompt) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
 //	auto lock = llama->lock();
 
@@ -1326,8 +1331,7 @@ JNIEXPORT jintArray JNICALL Java_de_kherud_llama_LlamaModel_encode(JNIEnv *env, 
 
 JNIEXPORT jbyteArray JNICALL
 Java_de_kherud_llama_LlamaModel_decodeBytes(JNIEnv *env, jobject obj, jintArray java_tokens) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
 
 //    auto lock = llama->lock();
 
@@ -1358,7 +1362,32 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_setLogger(JNIEnv *env, jc
 }
 
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete(JNIEnv *env, jobject obj) {
-    jlong llama_handle = env->GetLongField(obj, f_model_pointer);
-    jllama_context *llama = reinterpret_cast<jllama_context *>(llama_handle);
+    jllama_context *llama = getModelContext(env, obj);
     delete llama;
+}
+
+jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(JNIEnv *env, jobject obj, jobjectArray prompts,
+                                                           jobject inferenceParams) {
+    jllama_context *llama = getModelContext(env, obj);
+
+    // Setup
+    llama->rewind();
+    llama_reset_timings(llama->ctx);
+    setup_infer_params(env, llama, inferenceParams);
+
+    int batchSize = env->GetArrayLength(prompts);
+
+    // Fill return array
+//    jclass stringClass = env->FindClass("java/lang/String");
+//    jobjectArray strings = env->NewObjectArray(stringCount, stringClass, 0);
+//
+//    for (int i = 0; i < stringCount; i++) {
+//        char buffer[25];
+//        sprintf(buffer, "String %d", i);
+//        jstring string = env->NewStringUTF(buffer);
+//        env->SetObjectArrayElement(strings, i, string);
+//        env->DeleteLocalRef(string);
+//    }
+
+    return prompts;
 }

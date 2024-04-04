@@ -95,6 +95,14 @@ JNIEXPORT jbyteArray JNICALL Java_de_kherud_llama_LlamaModel_decodeBytes
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete
   (JNIEnv *, jobject);
 
+/*
+ * Class:     de_kherud_llama_LlamaModel
+ * Method:    batchComplete
+ * Signature: ([Ljava/lang/String;Lde/kherud/llama/InferenceParameters;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_de_kherud_llama_LlamaModel_batchComplete
+  (JNIEnv *, jobject, jobjectArray, jobject);
+
 #ifdef __cplusplus
 }
 #endif
