@@ -184,7 +184,7 @@ public class LlamaModel implements AutoCloseable {
 	 *
 	 * @param callback a method to call for log messages
 	 */
-	public static native void setLogger(@Nullable BiConsumer<LogLevel, String> callback);
+	public static native void setLogger(BiConsumer<LogLevel, String> callback);
 
 	@Override
 	public void close() {
