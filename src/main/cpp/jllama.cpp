@@ -89,7 +89,7 @@ static jfieldID f_main_gpu = 0;
 static jfieldID f_tensor_split = 0;
 static jfieldID f_rope_freq_base = 0;
 static jfieldID f_rope_freq_scale = 0;
-static jfieldID f_mul_mat_q = 0;
+//static jfieldID f_mul_mat_q = 0;
 static jfieldID f_f16_kv = 0;
 static jfieldID f_logits_all = 0;
 static jfieldID f_vocab_only = 0;
@@ -239,7 +239,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     f_tensor_split = env->GetFieldID(c_model_params, "tensorSplit", "[F");
     f_rope_freq_base = env->GetFieldID(c_model_params, "ropeFreqBase", "F");
     f_rope_freq_scale = env->GetFieldID(c_model_params, "ropeFreqScale", "F");
-    f_mul_mat_q = env->GetFieldID(c_model_params, "mulMatQ", "Z");
+//    f_mul_mat_q = env->GetFieldID(c_model_params, "mulMatQ", "Z");
     f_f16_kv = env->GetFieldID(c_model_params, "f16Kv", "Z");
     f_logits_all = env->GetFieldID(c_model_params, "logitsAll", "Z");
     f_vocab_only = env->GetFieldID(c_model_params, "vocabOnly", "Z");
@@ -250,7 +250,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     f_lora_base = env->GetFieldID(c_model_params, "loraBase", "Ljava/lang/String;");
     f_memory_f16 = env->GetFieldID(c_model_params, "memoryF16", "Z");
     f_mem_test = env->GetFieldID(c_model_params, "memTest", "Z");
-    f_numa = env->GetFieldID(c_model_params, "numa", "Z");
+    f_numa = env->GetFieldID(c_model_params, "numa", "I");
     f_verbose_prompt = env->GetFieldID(c_model_params, "verbosePrompt", "Z");
 
     if (!(f_model_pointer && f_iter_has_next && f_iter_n_generated && f_iter_token_index)) {
@@ -263,7 +263,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
         goto error;
     }
     if (!(f_n_threads && f_model_seed && f_n_ctx && f_n_batch && f_n_gpu_layers && f_main_gpu && f_tensor_split &&
-          f_rope_freq_base && f_rope_freq_scale && f_mul_mat_q && f_f16_kv && f_logits_all && f_vocab_only &&
+          //          f_rope_freq_base && f_rope_freq_scale && f_mul_mat_q && f_f16_kv && f_logits_all && f_vocab_only &&
+          f_rope_freq_base && f_rope_freq_scale && f_f16_kv && f_logits_all && f_vocab_only &&
           f_use_mmap && f_use_mlock && f_embedding && f_lora_adapter && f_lora_base && f_memory_f16 && f_mem_test &&
           f_numa && f_verbose_prompt)) {
         goto error;
@@ -717,7 +718,7 @@ struct jllama_context {
             const int n_discard = n_left / 2;
 
             llama_kv_cache_seq_rm(ctx, 0, params.n_keep + 1, params.n_keep + n_discard + 1);
-            llama_kv_cache_seq_shift(ctx, 0, params.n_keep + 1 + n_discard, n_past, -n_discard);
+            llama_kv_cache_seq_add(ctx, 0, params.n_keep + 1 + n_discard, n_past, -n_discard);
 
             for (size_t i = params.n_keep + 1 + n_discard; i < embd.size(); i++) {
                 embd[i - n_discard] = embd[i];
@@ -880,11 +881,11 @@ static gpt_params parse_model_params(JNIEnv *env, jobject jparams, jstring java_
     params.main_gpu = env->GetIntField(jparams, f_main_gpu);
     params.rope_freq_base = env->GetFloatField(jparams, f_rope_freq_base);
     params.rope_freq_scale = env->GetFloatField(jparams, f_rope_freq_scale);
-    params.mul_mat_q = env->GetBooleanField(jparams, f_mul_mat_q);
+//    params.mul_mat_q = env->GetBooleanField(jparams, f_mul_mat_q);
     params.embedding = env->GetBooleanField(jparams, f_embedding);
     params.use_mmap = env->GetBooleanField(jparams, f_use_mmap);
     params.use_mlock = env->GetBooleanField(jparams, f_use_mlock);
-    params.numa = env->GetBooleanField(jparams, f_numa);
+    params.numa = (ggml_numa_strategy) env->GetIntField(jparams, f_numa);
     params.verbose_prompt = env->GetBooleanField(jparams, f_verbose_prompt);
 
 //    jstring j_lora_adapter = (jstring)env->GetObjectField(jparams, f_lora_adapter);
@@ -1054,7 +1055,7 @@ Java_de_kherud_llama_LlamaModel_loadModel(JNIEnv *env, jobject obj, jstring file
     gpt_params params = parse_model_params(env, jparams, file_path);
 
     jllama_context *llama = new jllama_context;
-    llama_backend_init(false);
+    llama_backend_init();
 
     if (!llama->loadModel(params)) {
         env->ThrowNew(c_llama_error, "could not load model from given file path");
