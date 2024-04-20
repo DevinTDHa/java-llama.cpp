@@ -481,8 +481,8 @@ struct jllama_context {
     std::string generated_text;
     std::vector<completion_token_output> generated_token_probs;
 
-    size_t num_prompt_tokens = 0;
-    size_t num_tokens_predicted = 0;
+    size_t num_prompt_tokens = 0; // number of tokens in the prompt
+    size_t num_tokens_predicted = 0; // number of tokens predicted
     size_t n_past = 0;
     size_t n_remain = 0;
 
@@ -492,7 +492,7 @@ struct jllama_context {
 
     llama_model *model = nullptr;
     llama_context *ctx = nullptr;
-    gpt_params params;
+    gpt_params params; // CLI Arguments
     llama_sampling_context ctx_sampling;
     int n_ctx;
 
@@ -1056,6 +1056,7 @@ static void setup_infilling(JNIEnv *env, jllama_context *llama, jstring prefix, 
     setup_infer_params(env, llama, params);
 }
 
+
 JNIEXPORT void JNICALL
 Java_de_kherud_llama_LlamaModel_loadModel(JNIEnv *env, jobject obj, jstring file_path, jobject jparams) {
     gpt_params params = parse_model_params(env, jparams, file_path);
@@ -1366,6 +1367,29 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete(JNIEnv *env, jobje
     delete llama;
 }
 
+/** Sets up the model context for batch completion.
+ *
+ * The following steps will be done:
+ *
+ * 1. Setup inference parameters
+ * 2. Create a batch and fill it with the tokenized prompts
+ *
+ * @param env JNI environment
+ * @param llama model context
+ * @param prompts array of prompts
+ * @param params inference parameters
+ */
+static void setup_batch_completion(JNIEnv *env, jllama_context *llama, jobjectArray prompts, jobject params) {
+    // llama->prompt = parse_jstring(env, prompt);
+    // TODO: We might need to provide chat templates here.
+    llama->params.input_prefix = "";
+    llama->params.input_suffix = "";
+    setup_infer_params(env, llama, params);
+
+    // Fill the batch
+    llama_batch batch = llama_batch_init(0, 0, 0);
+}
+
 jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(JNIEnv *env, jobject obj, jobjectArray prompts,
                                                            jobject inferenceParams) {
     jllama_context *llama = getModelContext(env, obj);
@@ -1374,6 +1398,8 @@ jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(JNIEnv *env, jobject 
     llama->rewind();
     llama_reset_timings(llama->ctx);
     setup_infer_params(env, llama, inferenceParams);
+    setup_batch_completion(env, llama, prompts, inferenceParams);
+
 
     int batchSize = env->GetArrayLength(prompts);
 
@@ -1391,3 +1417,51 @@ jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(JNIEnv *env, jobject 
 
     return prompts;
 }
+
+// Generated
+//#include "llama.h"
+//#include <vector>
+//#include <string>
+//
+//std::vector<std::string> batchComplete(std::vector<std::string> prompts) {
+//    // Initialize the language model
+//    llama_model * model = llama_load_model_from_file("model_path", llama_model_default_params());
+//
+//    std::vector<std::string> completed_prompts;
+//
+//    for (const std::string& prompt : prompts) {
+//        // Tokenize the prompt
+//        std::vector<llama_token> tokens = ::llama_tokenize(model, prompt, true);
+//
+//        // Initialize the context
+//        llama_context * ctx = llama_new_context_with_model(model, llama_context_default_params());
+//
+//        // Create a llama_batch
+//        llama_batch batch = llama_batch_init(tokens.size(), 0, 1);
+//
+//        // Add tokens to the batch
+//        for (size_t i = 0; i < tokens.size(); ++i) {
+//            llama_batch_add(batch, tokens[i], i, { 0 }, false);
+//        }
+//
+//        // Decode the batch
+//        llama_decode(ctx, batch);
+//
+//        // Get the completed prompt
+//        std::string completed_prompt;
+//        for (int32_t i = 0; i < batch.n_tokens; ++i) {
+//            completed_prompt += llama_token_to_piece(ctx, batch.tokens[i]);
+//        }
+//
+//        completed_prompts.push_back(completed_prompt);
+//
+//        // Free the resources
+//        llama_batch_free(batch);
+//        llama_free(ctx);
+//    }
+//
+//    // Free the model
+//    llama_free_model(model);
+//
+//    return completed_prompts;
+//}
