@@ -1,11 +1,11 @@
-#include "batch_inference.h"
-#include "common.h"
-#include "llama.h"
-
 #include <cmath>
 #include <cstdio>
 #include <string>
 #include <vector>
+
+#include "batch_inference.h"
+#include "common.h"
+#include "llama.h"
 
 /** Tokenize the provided batch of prompts.
  *
@@ -95,7 +95,7 @@ bool generation_finished(const std::vector<int32_t> &i_batch) {
 }
 
 /**
- * This function is used to sample and add tokens to the batch for each
+ * Samples and add tokens to the batch for each
  * sequence. It uses the sampling context to sample a new token for each
  * sequence and adds it to the batch. If the end of the sequence is reached or
  * the maximum length is exceeded, the sequence is marked as finished.
@@ -140,11 +140,11 @@ void sample_and_add(const int max_len, const llama_model *model,
     // is it an end of stream? -> mark the stream as finished
     if (new_token_id == llama_token_eos(model) || n_cur[i] == max_len) {
       i_batch[i] = -1;
-      LOG_TEE("\n");
-      if (n_sequences > 1) {
-        LOG_TEE("%s: stream %d finished at n_cur[%d] = %d\n", __func__, i, i,
-                n_cur[i]);
-      }
+      // LOG_TEE("\n");
+      // if (n_sequences > 1) {
+      //   LOG_TEE("%s: stream %d finished at n_cur[%d] = %d\n", __func__, i, i,
+      //           n_cur[i]);
+      // }
 
       continue;
     }
@@ -152,7 +152,7 @@ void sample_and_add(const int max_len, const llama_model *model,
     generated_results[i] += llama_token_to_piece(ctx, new_token_id);
 
     // Log generated token
-    LOG_TEE("Seq %d generated %s\n", i, generated_results[i].c_str());
+    // LOG_TEE("Seq %d generated %s\n", i, generated_results[i].c_str());
 
     i_batch[i] = batch.n_tokens;
     n_cur[i] += 1;
@@ -187,9 +187,9 @@ int get_n_kv_req(const int max_len,
  * @return A pointer to a vector of strings containing the generated results.
  * @throws std::runtime_error if the decoding process fails.
  */
-std::vector<std::string> *batch_complete(llama_model *model, llama_context *ctx,
-                                         std::vector<std::string> prompts,
-                                         int max_batch_tokens, int max_len) {
+std::vector<std::string> batch_complete(llama_model *model, llama_context *ctx,
+                                        std::vector<std::string> prompts,
+                                        int max_batch_tokens, int max_len) {
   gpt_params params;
 
   // batch of prompts
@@ -238,9 +238,8 @@ std::vector<std::string> *batch_complete(llama_model *model, llama_context *ctx,
   std::vector<std::vector<llama_token>> batch_tokens =
       tokenizePrompts(ctx, prompts);
 
-  const int n_ctx = (int)llama_n_ctx(ctx);
-
-  int n_kv_req = get_n_kv_req(max_len, batch_tokens);
+  // const int n_ctx = (int)llama_n_ctx(ctx);
+  // int n_kv_req = get_n_kv_req(max_len, batch_tokens);
 
   // LOG_TEE("\n%s: n_len = %d, n_ctx = %d, n_kv_req = %d\n", __func__, max_len,
   // n_ctx, n_kv_req);
@@ -260,6 +259,7 @@ std::vector<std::string> *batch_complete(llama_model *model, llama_context *ctx,
   // (i.e. distinct states for recurrent models) Future Work: Support
   // multi-sequence generation at some point.
   int max_sequences = 1;
+  // TODO: maybe get these parameters from the ctx
   llama_batch batch = llama_batch_init(max_batch_tokens, 0, max_sequences);
   fill_batch(batch, batch_tokens);
 
@@ -303,7 +303,7 @@ std::vector<std::string> *batch_complete(llama_model *model, llama_context *ctx,
   llama_sampling_context *ctx_sampling = llama_sampling_init(sampling_params);
   llama_context *ctx_cfg = nullptr; // Optional classifier-free guidance context
 
-  const auto t_main_start = ggml_time_us();
+  // const auto t_main_start = ggml_time_us();
 
   // While there are still sequences to decode
   while (!generation_finished(i_batch)) {
@@ -322,7 +322,7 @@ std::vector<std::string> *batch_complete(llama_model *model, llama_context *ctx,
     // evaluate the current batch with the transformer model
     if (!decode_batches(ctx, batch, (int32_t)max_batch_tokens)) {
       fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
-      return nullptr;
+      return std::vector<std::string>();
     }
   }
 
@@ -332,5 +332,5 @@ std::vector<std::string> *batch_complete(llama_model *model, llama_context *ctx,
   // llama_free_model(model);
   // llama_backend_free();
 
-  return &generated_results;
+  return generated_results;
 }

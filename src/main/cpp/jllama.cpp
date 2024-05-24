@@ -119,7 +119,12 @@ static jobject o_log_level_error = 0;
 static JavaVM *g_vm = nullptr;
 static jobject g_log_callback = nullptr;
 
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
+// Utils
+std::vector<std::string> convertPrompts(JNIEnv *env, jobjectArray prompts);
+jobjectArray convertToJava(JNIEnv *env,
+                           std::vector<std::string> &generatedPrompts);
+
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *) {
   JNIEnv *env = 0;
 
   if (JNI_OK != vm->GetEnv((void **)&env, JNI_VERSION_1_1)) {
@@ -339,7 +344,7 @@ success:
   return JNI_VERSION_1_2;
 }
 
-JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved) {
+JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *) {
   JNIEnv *env = 0;
 
   if (JNI_OK != vm->GetEnv((void **)&env, JNI_VERSION_1_1))
@@ -372,7 +377,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved) {
 }
 
 static void jllama_log_callback(enum ggml_log_level level, const char *text,
-                                void *user_data) {
+                                void *) {
   if (g_log_callback == nullptr)
     return;
 
@@ -1009,25 +1014,25 @@ static gpt_params parse_model_params(JNIEnv *env, jobject jparams,
   //		if (params.n_gpu_layers > 0) {
   //			// LOG_WARNING("Not compiled with GPU offload support,
   //--n-gpu-layers option will be ignored. "
-  //			// 			"See main README.md for information on enabling
-  //GPU BLAS support",
+  //			// 			"See main README.md for
+  // information on enabling GPU BLAS support",
   //			// 			{{"n_gpu_layers",
-  //params.n_gpu_layers}});
+  // params.n_gpu_layers}});
   //		}
   // #endif
   //
   // #ifndef GGML_USE_CUBLAS
   //	if (params.low_vram) {
-  //		// LOG_WARNING("warning: llama.cpp was compiled without cuBLAS. It
-  //is not possible to set lower vram usage.\n", {});
+  //		// LOG_WARNING("warning: llama.cpp was compiled without cuBLAS.
+  // It is not possible to set lower vram usage.\n", {});
   //	}
   //	if (!params.mul_mat_q) {
   //		// LOG_WARNING("warning: llama.cpp was compiled without cuBLAS.
-  //Disabling mul_mat_q kernels has no effect.\n", {});
+  // Disabling mul_mat_q kernels has no effect.\n", {});
   //	}
   //	if (params.main_gpu != 0) {
   //		// LOG_WARNING("llama.cpp was compiled without cuBLAS. It is not
-  //possible to set a main GPU.", {});
+  // possible to set a main GPU.", {});
   //	}
   // #endif
   //
@@ -1443,7 +1448,7 @@ JNIEXPORT jbyteArray JNICALL Java_de_kherud_llama_LlamaModel_decodeBytes(
 }
 
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_setLogger(
-    JNIEnv *env, jclass clazz, jobject callback) {
+    JNIEnv *env, jclass, jobject callback) {
   env->GetJavaVM(&g_vm);
 
   if (g_log_callback != nullptr) {
@@ -1564,60 +1569,15 @@ jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(
 
   int max_batch_tokens = 512; // TODO: where to get this actual value
   int max_len = 32;           // TODO: where to get this actual value
-  std::vector<std::string> generatedPrompts = batch_complete(
-      llama->model, llama->ctx, batch, max_batch_tokens, max_len);
-
-  jobjectArray result = convertToJava(env, generatedPrompts);
+  jobjectArray result = nullptr;
+  try {
+    std::vector<std::string> generatedPrompts = batch_complete(
+        llama->model, llama->ctx, batch, max_batch_tokens, max_len);
+    result = convertToJava(env, generatedPrompts);
+  } catch (const std::runtime_error &e) {
+    std::string errorMessage =
+        "Error during batch completion: " + std::string(e.what());
+    jllama_log_callback(GGML_LOG_LEVEL_ERROR, errorMessage.c_str());
+  }
   return result;
 }
-
-// Generated
-//#include "llama.h"
-//#include <vector>
-//#include <string>
-//
-// std::vector<std::string> batchComplete(std::vector<std::string> prompts) {
-//    // Initialize the language model
-//    llama_model * model = llama_load_model_from_file("model_path",
-//    llama_model_default_params());
-//
-//    std::vector<std::string> completed_prompts;
-//
-//    for (const std::string& prompt : prompts) {
-//        // Tokenize the prompt
-//        std::vector<llama_token> tokens = ::llama_tokenize(model, prompt,
-//        true);
-//
-//        // Initialize the context
-//        llama_context * ctx = llama_new_context_with_model(model,
-//        llama_context_default_params());
-//
-//        // Create a llama_batch
-//        llama_batch batch = llama_batch_init(tokens.size(), 0, 1);
-//
-//        // Add tokens to the batch
-//        for (size_t i = 0; i < tokens.size(); ++i) {
-//            llama_batch_add(batch, tokens[i], i, { 0 }, false);
-//        }
-//
-//        // Decode the batch
-//        llama_decode(ctx, batch);
-//
-//        // Get the completed prompt
-//        std::string completed_prompt;
-//        for (int32_t i = 0; i < batch.n_tokens; ++i) {
-//            completed_prompt += llama_token_to_piece(ctx, batch.tokens[i]);
-//        }
-//
-//        completed_prompts.push_back(completed_prompt);
-//
-//        // Free the resources
-//        llama_batch_free(batch);
-//        llama_free(ctx);
-//    }
-//
-//    // Free the model
-//    llama_free_model(model);
-//
-//    return completed_prompts;
-//}

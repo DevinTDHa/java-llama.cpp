@@ -84,17 +84,17 @@ else ()
 endif ()
 
 target_include_directories(jllama PRIVATE src/main/cpp ${JNI_INCLUDE_DIRS})
-target_include_directories(batch_inference PRIVATE src/main/cpp ${JNI_INCLUDE_DIRS})
-target_link_libraries(batch_inference PRIVATE common llama ${LLAMA_EXTRA_LIBS})
+target_include_directories(batch_inference PUBLIC src/main/cpp ${JNI_INCLUDE_DIRS})
+target_link_libraries(batch_inference PUBLIC common llama ${LLAMA_EXTRA_LIBS})
 target_link_libraries(jllama PRIVATE common llama ${LLAMA_EXTRA_LIBS} batch_inference)
 target_compile_features(jllama PRIVATE cxx_std_11)
 
 if (OS_NAME STREQUAL "Windows")
-    set_target_properties(jllama llama PROPERTIES
+    set_target_properties(jllama llama batch_inference PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_RELEASE ${JLLAMA_DIR}
     )
 else ()
-    set_target_properties(jllama llama PROPERTIES
+    set_target_properties(jllama llama batch_inference PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY ${JLLAMA_DIR}
     )
 endif ()
@@ -102,4 +102,15 @@ endif ()
 if (LLAMA_METAL)
     # copy ggml-metal.metal to bin directory
     configure_file(${llama.cpp_SOURCE_DIR}/ggml-metal.metal ${JLLAMA_DIR}/ggml-metal.metal COPYONLY)
+endif ()
+
+# Test target
+if (ENABLE_TEST)
+    add_executable(test_batch src/test/cpp/test_batch.cpp)
+    # Link the necessary libraries to your test target
+    target_link_libraries(test_batch PRIVATE batch_inference)
+    # Set the output directory for the test executable
+    set_target_properties(test_batch PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    )
 endif ()
