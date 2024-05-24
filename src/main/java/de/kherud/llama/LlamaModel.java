@@ -1,14 +1,13 @@
 package de.kherud.llama;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.annotation.Native;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * This class is a wrapper around the llama.cpp functionality.
@@ -200,6 +199,15 @@ public class LlamaModel implements AutoCloseable {
 	private native byte[] getInfill(String prefix, String suffix, InferenceParameters parameters);
 	private native byte[] decodeBytes(int[] tokens);
 	private native void delete();
+
+	/** Run a batch of prompts through the model and return the generated completions.
+     * <p>
+     * The prompts will be processed as a single logical batch in llama.cpp.
+	 *
+	 * @param prompts an array of prompts
+	 * @param parameters Parameters for inference
+	 * @return an array of completions
+	 */
 	public native String[] batchComplete(String[] prompts, InferenceParameters parameters);
 
 	/**

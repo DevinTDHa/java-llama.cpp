@@ -60,8 +60,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  int max_batch_tokens = 512; // TODO: where to get this actual value
-  int max_len = 32;           // TODO: where to get this actual value
+  int max_batch_tokens = 2048;
+  int max_len = 200;
   std::vector<std::string> generatedPrompts =
       batch_complete(model, ctx, prompts, max_batch_tokens, max_len);
+
+  for (const auto &prompt : generatedPrompts) {
+    printf("%s\n", prompt.c_str());
+  }
+
 }

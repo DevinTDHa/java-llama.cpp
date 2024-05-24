@@ -1567,9 +1567,10 @@ jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(
   setup_infer_params(env, llama, inferenceParams);
   std::vector<std::string> batch = convertPrompts(env, prompts);
 
-  int max_batch_tokens = 512; // TODO: where to get this actual value
-  int max_len = 32;           // TODO: where to get this actual value
+  int max_batch_tokens = llama->params.n_batch;
+  int max_len = llama->params.n_predict;
   jobjectArray result = nullptr;
+
   try {
     std::vector<std::string> generatedPrompts = batch_complete(
         llama->model, llama->ctx, batch, max_batch_tokens, max_len);
