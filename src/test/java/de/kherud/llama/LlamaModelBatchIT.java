@@ -55,6 +55,30 @@ public class LlamaModelBatchIT {
     public void benchmarkBatch() {
         // Benchmarking
 
-    }
+        String[] prompts = new String[]{"The moons of Jupiter are ", // "The moons of Jupiter are 77 in total,
+                // with 79 confirmed natural satellites and 2
+                // man-made ones. The four"
+                "Earth is ", // "Earth is 4.5 billion years old. It has been home to
+                // countless species, some of which have gone extinct, while
+                // others have evolved into"
+                "The moon is ", // "The moon is 1/400th the size of the sun. The sun
+                // is 1.39 million kilometers in diameter, while"
 
+        };
+
+        // Preimplemented Serial Execution
+        long start = System.currentTimeMillis();
+        for (String prompt : prompts) {
+            model.complete(prompt, params);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("Serial Execution: " + (end - start) + "ms");
+
+        // Batch Execution
+        start = System.currentTimeMillis();
+        model.batchComplete(prompts, params);
+        end = System.currentTimeMillis();
+        System.out.println("Batch Execution: " + (end - start) + "ms");
+
+    }
 }
