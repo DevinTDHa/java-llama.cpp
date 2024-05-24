@@ -73,11 +73,18 @@ if (NOT DEFINED JNI_INCLUDE_DIRS)
         endforeach ()
     endif ()
 endif ()
+
+# Detect Java installation and include jni.h. TODO: MOre minimal solution?
+# find_package(JNI REQUIRED)
+
 if (NOT JNI_INCLUDE_DIRS)
     message(FATAL_ERROR "Could not determine JNI include directories")
+else ()
+    message(STATUS "JNI include directories: ${JNI_INCLUDE_DIRS}")
 endif ()
 
 target_include_directories(jllama PRIVATE src/main/cpp ${JNI_INCLUDE_DIRS})
+target_include_directories(batch_inference PRIVATE src/main/cpp ${JNI_INCLUDE_DIRS})
 target_link_libraries(batch_inference PRIVATE common llama ${LLAMA_EXTRA_LIBS})
 target_link_libraries(jllama PRIVATE common llama ${LLAMA_EXTRA_LIBS} batch_inference)
 target_compile_features(jllama PRIVATE cxx_std_11)
