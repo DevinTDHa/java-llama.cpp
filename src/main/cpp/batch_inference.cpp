@@ -42,8 +42,7 @@ void fill_batch(llama_batch &batch,
 
   for (int b = 0; b < n_sequences; b++) {
     const auto seq_length = (llama_pos)batch_tokens[b].size();
-    for (llama_pos tok = 0; tok < seq_length;
-         tok++) { // TODO: Check data type ok?
+    for (llama_pos tok = 0; tok < seq_length; tok++) {
       llama_batch_add(batch, batch_tokens[b][tok], tok, {b},
                       tok ==
                           seq_length - 1); // If last token, we need the logits

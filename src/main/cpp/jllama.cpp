@@ -1284,11 +1284,7 @@ JNIEXPORT jobject JNICALL Java_de_kherud_llama_LlamaModel_getNext(
 
 JNIEXPORT jbyteArray JNICALL Java_de_kherud_llama_LlamaModel_getAnswer(
     JNIEnv *env, jobject obj, jstring prompt, jobject params) {
-  std::cout << "DEBUG DHA: in getAnswer" << std::endl;
-
-  // Print prompt
   const char *promptChars = env->GetStringUTFChars(prompt, NULL);
-  std::cout << "DEBUG DHA: Received as prompt: " << promptChars << std::endl;
   env->ReleaseStringUTFChars(prompt, promptChars);
 
   jllama_context *llama = getModelContext(env, obj);
