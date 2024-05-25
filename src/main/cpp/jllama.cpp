@@ -572,6 +572,8 @@ struct jllama_context {
       llama_grammar_free(grammar);
       grammar = nullptr;
     }
+    // TODO: Call this at the end of the program?
+    // llama_backend_free();
   }
 
   /**
@@ -1469,39 +1471,6 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete(JNIEnv *env,
   delete llama;
 }
 
-///** Sets up the model context for batch completion.
-// *
-// * The following steps will be done:
-// *
-// * 1. Setup inference parameters
-// * 2. Create a batch and fill it with the tokenized prompts
-// *
-// * @param env JNI environment
-// * @param llama model context
-// * @param prompts array of prompts
-// * @param params inference parameters
-// */
-// static void setup_batch_completion(JNIEnv *env, jllama_context *llama,
-// jobjectArray prompts, jobject params) {
-//    // llama->prompt = parse_jstring(env, prompt);
-//    // TODO: We might need to provide chat templates here.
-//    llama->params.input_prefix = "";
-//    llama->params.input_suffix = "";
-//    setup_infer_params(env, llama, params);
-//
-//    // Fill the batch
-//    llama_batch batch = llama_batch_init(0, 0, 0);
-//
-//    // convert prompts to cpp vector of strings
-//    std::vector<std::string> prompts_strings;
-//    jsize prompt_count = env->GetArrayLength(prompts);
-//    for (jsize i = 0; i < prompt_count; i++) {
-//        auto prompt = (jstring) env->GetObjectArrayElement(prompts, i);
-//        prompts_strings.push_back(parse_jstring(env, prompt));
-//        env->DeleteLocalRef(prompt);
-//    }
-//}
-
 std::vector<std::string> convertPrompts(JNIEnv *env, jobjectArray prompts) {
   jsize arrayLength = env->GetArrayLength(prompts);
   std::vector<std::string> result;
@@ -1536,49 +1505,28 @@ jobjectArray convertToJava(JNIEnv *env,
 
 jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(
     JNIEnv *env, jobject obj, jobjectArray prompts, jobject inferenceParams) {
+  // Setup model and context
   jllama_context *llama = getModelContext(env, obj);
-
-  // Setup
-  // TODO: Check if everything was set up correctly at this point.
-  // Reference:
-  // llama_backend_init();
-  // llama_numa_init(params.numa);
-  // llama_model_params model_params = llama_model_default_params();
-  // model_params.n_gpu_layers = 99; // offload all layers to the GPU
-
-  // llama_model *model = llama_load_model_from_file(params.model.c_str(),
-  // model_params);
-
-  // initialize the context
-  // llama_context_params ctx_params = llama_context_default_params();
-
-  // Context setup
-  // ctx_params.seed = 1234;
-  // ctx_params.n_ctx = 2048; // text context, 0 = from model, size of the KV
-  // cache ctx_params.n_batch = 512; // logical maximum batch size that can be
-  // submitted to llama_decode ctx_params.n_threads = params.n_threads;
-  // ctx_params.n_threads_batch = params.n_threads_batch == -1 ?
-  // params.n_threads : params.n_threads_batch;
-
-  // llama_context *ctx = llama_new_context_with_model(model, ctx_params);
-
   llama->rewind();
   llama_reset_timings(llama->ctx);
   setup_infer_params(env, llama, inferenceParams);
-  std::vector<std::string> batch = convertPrompts(env, prompts);
 
+  // Prepare Input
+  std::vector<std::string> batch = convertPrompts(env, prompts);
   int max_batch_tokens = llama->params.n_batch;
   int max_len = llama->params.n_predict;
   jobjectArray result = nullptr;
 
   try {
-    std::vector<std::string> generatedPrompts = batch_complete(
-        llama->model, llama->ctx, batch, max_batch_tokens, max_len);
+    std::vector<std::string> generatedPrompts =
+        batch_complete(llama->model, llama->ctx, &llama->ctx_sampling, batch,
+                       max_batch_tokens, max_len);
     result = convertToJava(env, generatedPrompts);
   } catch (const std::runtime_error &e) {
     std::string errorMessage =
         "Error during batch completion: " + std::string(e.what());
     jllama_log_callback(GGML_LOG_LEVEL_ERROR, errorMessage.c_str());
+    env->ThrowNew(c_llama_error, errorMessage.c_str());
   }
   return result;
 }

@@ -43,7 +43,7 @@ void fill_batch(llama_batch &batch,
   for (int b = 0; b < n_sequences; b++) {
     const auto seq_length = (llama_pos)batch_tokens[b].size();
     for (llama_pos tok = 0; tok < seq_length;
-         tok++) { // TODO Check data type ok?
+         tok++) { // TODO: Check data type ok?
       llama_batch_add(batch, batch_tokens[b][tok], tok, {b},
                       tok ==
                           seq_length - 1); // If last token, we need the logits
@@ -178,6 +178,8 @@ int get_n_kv_req(const int max_len,
  * parameters.
  *
  * TODO: Truncation and other prompt preprocessing?
+ * TODO: Should max_len be generated sequence length or total length, including
+ * prompt?
  *
  * @param model The Llama model to use for inference.
  * @param ctx The Llama context to use for inference.
@@ -188,81 +190,34 @@ int get_n_kv_req(const int max_len,
  * @throws std::runtime_error if the decoding process fails.
  */
 std::vector<std::string> batch_complete(llama_model *model, llama_context *ctx,
+                                        llama_sampling_context *ctx_sampling,
                                         std::vector<std::string> prompts,
                                         int max_batch_tokens, int max_len) {
   gpt_params params;
 
-  // batch of prompts
-  // std::vector<std::string> prompts = {"The moons of Jupiter are ", "Earth is
-  // ",
-  //                                     "The moon is ", //"The solar system
-  //                                     consists of ",
-  // };
   const int n_sequences = (int)prompts.size();
-
-  // init LLM TODO: Might be done somewhere else?
-  // llama_backend_init();
-  // llama_numa_init(params.numa);
-  // initialize the model
-  // llama_model_params model_params = llama_model_default_params();
-  // model_params.n_gpu_layers = 99; // offload all layers to the GPU
-
-  // llama_model *model = llama_load_model_from_file(params.model.c_str(),
-  // model_params);
-
-  // TODO: Might move this somewhere else during model init
-  // if (model == nullptr) {
-  //     fprintf(stderr, "%s: error: unable to load model\n", __func__);
-  //     return 1;
-  // }
-
-  // initialize the context
-  // llama_context_params ctx_params = llama_context_default_params();
-
-  // Context setup
-  // ctx_params.seed = 1234;
-  // ctx_params.n_ctx = 2048; // text context, 0 = from model, size of the KV
-  // cache ctx_params.n_batch = 512; // logical maximum batch size that can be
-  // submitted to llama_decode ctx_params.n_threads = params.n_threads;
-  // ctx_params.n_threads_batch = params.n_threads_batch == -1 ?
-  // params.n_threads : params.n_threads_batch;
-
-  // llama_context *ctx = llama_new_context_with_model(model, ctx_params);
-
-  // if (ctx == nullptr) {
-  //     fprintf(stderr, "%s: error: failed to create the llama_context\n",
-  //     __func__); return 1;
-  // }
 
   // Create a vector of vectors to hold the result
   std::vector<std::vector<llama_token>> batch_tokens =
       tokenizePrompts(ctx, prompts);
 
-  // const int n_ctx = (int)llama_n_ctx(ctx);
-  // int n_kv_req = get_n_kv_req(max_len, batch_tokens);
+  // Check if the KV cache size is big enough
+  const int n_ctx = (int)llama_n_ctx(ctx);
+  int n_kv_req = get_n_kv_req(params.n_predict, batch_tokens);
+  if (n_kv_req > n_ctx) {
+    const char *msg =
+        "batch_complete: error: n_kv_req > n_ctx, the required KV cache size "
+        "is not big enough. Either reduce n_len or increase n_ctx.\n";
+    throw std::runtime_error(msg);
+  }
 
-  // LOG_TEE("\n%s: n_len = %d, n_ctx = %d, n_kv_req = %d\n", __func__, max_len,
-  // n_ctx, n_kv_req);
-
-  // make sure the KV cache is big enough to hold all the prompt and generated
-  // tokens
-  // TODO: How to handle this?
-  // if (n_kv_req > n_ctx) {
-  //     LOG_TEE("%s: error: n_kv_req > n_ctx, the required KV cache size is not
-  //     big enough\n", __func__); LOG_TEE("%s:        either reduce n_len or
-  //     increase n_ctx\n", __func__); return 1;
-  // }
-
-  // we use this object to submit token data for decoding
-  // int max_batch_tokens = (int) n_batch; // maximum number of tokens the batch
-  // can hold. TODO: Calculation? Max number of generated sequences per prompt
-  // (i.e. distinct states for recurrent models) Future Work: Support
-  // multi-sequence generation at some point.
+  // Create a batch to hold the tokens
+  // Future Work: Support multi-sequence generation at some point.
   int max_sequences = 1;
-  // TODO: maybe get these parameters from the ctx
   llama_batch batch = llama_batch_init(max_batch_tokens, 0, max_sequences);
   fill_batch(batch, batch_tokens);
 
+  // Evaluate the initial batch
   bool decode_result = decode_batches(ctx, batch, (int32_t)max_batch_tokens);
   if (!decode_result) {
     throw std::runtime_error("decode_batches() failed");
@@ -290,20 +245,8 @@ std::vector<std::string> batch_complete(llama_model *model, llama_context *ctx,
   std::vector<int> n_cur = i_batch;
   // int n_decode = 0; // Only For benchmarking
 
-  // initialize the sampling context
-  llama_sampling_params sampling_params = params.sparams;
-  const int top_k = 40;
-  const float top_p = 0.9f;
-  const float temp = 0.4f;
-
-  sampling_params.top_k = top_k;
-  sampling_params.top_p = top_p;
-  sampling_params.temp = temp;
-
-  llama_sampling_context *ctx_sampling = llama_sampling_init(sampling_params);
-  llama_context *ctx_cfg = nullptr; // Optional classifier-free guidance context
-
-  // const auto t_main_start = ggml_time_us();
+  // Future Work: Optional classifier-free guidance context. Disabled for now.
+  llama_context *ctx_cfg = nullptr;
 
   // While there are still sequences to decode
   while (!generation_finished(i_batch)) {
@@ -326,11 +269,7 @@ std::vector<std::string> batch_complete(llama_model *model, llama_context *ctx,
     }
   }
 
-  // free resources. TODO: When for the others?
   llama_batch_free(batch);
-  // llama_free(ctx);
-  // llama_free_model(model);
-  // llama_backend_free();
 
   return generated_results;
 }

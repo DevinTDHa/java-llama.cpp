@@ -61,12 +61,18 @@ int main(int argc, char **argv) {
   }
 
   int max_batch_tokens = 2048;
-  int max_len = 200;
-  std::vector<std::string> generatedPrompts =
-      batch_complete(model, ctx, prompts, max_batch_tokens, max_len);
+  int max_len = 32;
+
+  llama_sampling_params sampling_params = params.sparams;
+  sampling_params.top_k = 40;
+  sampling_params.top_p = 0.9f;
+  sampling_params.temp = 0.4f;
+  llama_sampling_context *ctx_sampling = llama_sampling_init(sampling_params);
+
+  std::vector<std::string> generatedPrompts = batch_complete(
+      model, ctx, ctx_sampling, prompts, max_batch_tokens, max_len);
 
   for (const auto &prompt : generatedPrompts) {
     printf("%s\n", prompt.c_str());
   }
-
 }

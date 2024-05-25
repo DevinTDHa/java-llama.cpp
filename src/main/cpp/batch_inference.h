@@ -37,5 +37,6 @@ int get_n_kv_req(int max_len,
                  const std::vector<std::vector<llama_token>> &batch_tokens);
 
 std::vector<std::string> batch_complete(llama_model *model, llama_context *ctx,
+                                        llama_sampling_context *ctx_sampling,
                                         std::vector<std::string> prompts,
                                         int max_batch_tokens, int max_len);
