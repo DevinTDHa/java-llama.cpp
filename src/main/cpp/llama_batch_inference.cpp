@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "batch_inference.h"
+#include "llama_batch_inference.h"
 #include "common.h"
 #include "llama.h"
 
@@ -264,7 +264,7 @@ std::vector<std::string> batch_complete(llama_model *model, llama_context *ctx,
     // evaluate the current batch with the transformer model
     if (!decode_batches(ctx, batch, (int32_t)max_batch_tokens)) {
       fprintf(stderr, "%s : failed to eval, return code %d\n", __func__, 1);
-      return std::vector<std::string>();
+      return {};
     }
   }
 

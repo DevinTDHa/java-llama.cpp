@@ -1,4 +1,4 @@
-#include "batch_inference.h"
+#include "llama_batch_inference.h"
 #include "jllama.h" // Include the file that contains the function to test
 
 int main(int argc, char **argv) {

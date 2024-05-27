@@ -64,6 +64,7 @@ class LlamaLoader {
 		}
 		loadNativeLibrary("llama");
 		loadNativeLibrary("jllama");
+		loadNativeLibrary("llama_batch_inference"); // Load Batch Inference Module
 		extracted = true;
 	}
 
@@ -151,7 +152,8 @@ class LlamaLoader {
 
 		throw new UnsatisfiedLinkError(
 				String.format(
-						"No native library found for os.name=%s, os.arch=%s, paths=[%s]",
+						"No native library '%s' found for os.name=%s, os.arch=%s, paths=[%s]",
+						nativeLibName,
 						OSInfo.getOSName(),
 						OSInfo.getArchName(),
 						String.join(File.pathSeparator, triedPaths)

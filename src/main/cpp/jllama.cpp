@@ -3,11 +3,11 @@
 #include <mutex>
 #include <string>
 
-#include "batch_inference.h"
 #include "common.h"
 #include "grammar-parser.h"
 #include "jllama.h"
 #include "llama.h"
+#include "llama_batch_inference.h"
 #include "sampling.h"
 
 // classes
@@ -560,6 +560,7 @@ struct jllama_context {
   }
 
   ~jllama_context() {
+    jllama_log_callback(GGML_LOG_LEVEL_INFO, "jllama_context destructor");
     if (ctx) {
       llama_free(ctx);
       ctx = nullptr;
@@ -1521,7 +1522,7 @@ jobjectArray Java_de_kherud_llama_LlamaModel_batchComplete(
   } catch (const std::runtime_error &e) {
     std::string errorMessage =
         "Error during batch completion: " + std::string(e.what());
-    jllama_log_callback(GGML_LOG_LEVEL_ERROR, errorMessage.c_str());
+    jllama_log_callback(GGML_LOG_LEVEL_ERROR, errorMessage);
     env->ThrowNew(c_llama_error, errorMessage.c_str());
   }
   return result;

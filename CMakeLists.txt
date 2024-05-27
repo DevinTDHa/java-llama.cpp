@@ -50,7 +50,7 @@ set(JLLAMA_DIR ${CMAKE_SOURCE_DIR}/src/main/resources/de/kherud/llama/${OS_NAME}
 message(STATUS "Installing files to ${JLLAMA_DIR}")
 
 add_library(jllama SHARED src/main/cpp/jllama.cpp)
-add_library(batch_inference SHARED src/main/cpp/batch_inference.cpp)
+add_library(llama_batch_inference SHARED src/main/cpp/llama_batch_inference.cpp)
 
 # include jni.h and jni_md.h
 if (NOT DEFINED JNI_INCLUDE_DIRS)
@@ -84,17 +84,17 @@ else ()
 endif ()
 
 target_include_directories(jllama PRIVATE src/main/cpp ${JNI_INCLUDE_DIRS})
-target_include_directories(batch_inference PUBLIC src/main/cpp ${JNI_INCLUDE_DIRS})
-target_link_libraries(batch_inference PUBLIC common llama ${LLAMA_EXTRA_LIBS})
-target_link_libraries(jllama PRIVATE common llama ${LLAMA_EXTRA_LIBS} batch_inference)
+target_include_directories(llama_batch_inference PUBLIC src/main/cpp ${JNI_INCLUDE_DIRS})
+target_link_libraries(llama_batch_inference PUBLIC common llama ${LLAMA_EXTRA_LIBS})
+target_link_libraries(jllama PRIVATE common llama ${LLAMA_EXTRA_LIBS} llama_batch_inference)
 target_compile_features(jllama PRIVATE cxx_std_11)
 
 if (OS_NAME STREQUAL "Windows")
-    set_target_properties(jllama llama batch_inference PROPERTIES
+    set_target_properties(jllama llama llama_batch_inference PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY_RELEASE ${JLLAMA_DIR}
     )
 else ()
-    set_target_properties(jllama llama batch_inference PROPERTIES
+    set_target_properties(jllama llama llama_batch_inference PROPERTIES
             LIBRARY_OUTPUT_DIRECTORY ${JLLAMA_DIR}
     )
 endif ()
@@ -105,12 +105,19 @@ if (LLAMA_METAL)
 endif ()
 
 # Test target
-if (ENABLE_TEST)
-    add_executable(test_batch src/test/cpp/test_batch.cpp)
-    # Link the necessary libraries to your test target
-    target_link_libraries(test_batch PRIVATE batch_inference)
-    # Set the output directory for the test executable
-    set_target_properties(test_batch PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    )
+add_executable(test_batch src/test/cpp/test_batch.cpp)
+# Link the necessary libraries to your test target
+target_link_libraries(test_batch PRIVATE llama_batch_inference)
+# Set the output directory for the test executable
+set_target_properties(test_batch PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+
+# Enable Debug symbols for all libraries if using Debug config
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Enabling debug symbols")
+    target_compile_options(jllama PRIVATE -g)
+    target_compile_options(llama_batch_inference PRIVATE -g)
+    target_compile_options(llama PRIVATE -g)
+    target_compile_options(test_batch PRIVATE -g)
 endif ()
