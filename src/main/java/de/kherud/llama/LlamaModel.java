@@ -1,7 +1,6 @@
 package de.kherud.llama;
 
 import de.kherud.llama.args.LogFormat;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Native;
 import java.nio.charset.StandardCharsets;
@@ -22,110 +21,131 @@ import java.util.function.BiConsumer;
  */
 public class LlamaModel implements AutoCloseable {
 
-	static {
-		LlamaLoader.initialize();
-	}
+    static {
+        LlamaLoader.initialize();
+    }
 
-	@Native
-	private long ctx;
+    @Native
+    private long ctx;
 
-	/**
-	 * Load with the given {@link ModelParameters}. Make sure to either set
-	 * <ul>
-	 *     <li>{@link ModelParameters#setModelFilePath(String)}</li>
-	 *     <li>{@link ModelParameters#setModelUrl(String)}</li>
-	 *     <li>{@link ModelParameters#setHuggingFaceRepository(String)}}, {@link ModelParameters#setHuggingFaceFile(String)}</li>
-	 * </ul>
-	 *
-	 * @param parameters the set of options
-	 * @throws LlamaException if no model could be loaded from the given file path
-	 */
-	public LlamaModel(ModelParameters parameters) {
-		loadModel(parameters.toString());
-	}
+    /**
+     * Load with the given {@link ModelParameters}. Make sure to either set
+     * <ul>
+     *     <li>{@link ModelParameters#setModelFilePath(String)}</li>
+     *     <li>{@link ModelParameters#setModelUrl(String)}</li>
+     *     <li>{@link ModelParameters#setHuggingFaceRepository(String)}}, {@link ModelParameters#setHuggingFaceFile(String)}</li>
+     * </ul>
+     *
+     * @param parameters the set of options
+     * @throws LlamaException if no model could be loaded from the given file path
+     */
+    public LlamaModel(ModelParameters parameters) {
+        loadModel(parameters.toString());
+    }
 
-	/**
-	 * Generate and return a whole answer with custom parameters. Note, that the prompt isn't preprocessed in any
-	 * way, nothing like "User: ", "###Instruction", etc. is added.
-	 *
-	 * @return an LLM response
-	 */
-	public String complete(InferenceParameters parameters) {
-		parameters.setStream(false);
-		int taskId = requestCompletion(parameters.toString());
-		LlamaOutput output = receiveCompletion(taskId);
-		return output.text;
-	}
+    /**
+     * Generate and return a whole answer with custom parameters. Note, that the prompt isn't preprocessed in any
+     * way, nothing like "User: ", "###Instruction", etc. is added.
+     *
+     * @return an LLM response
+     */
+    public String complete(InferenceParameters parameters) {
+        parameters.setStream(false);
+        int taskId = requestCompletion(parameters.toString());
+        LlamaOutput output = receiveCompletion(taskId);
+        return output.text;
+    }
 
-	/**
-	 * Generate and stream outputs with custom inference parameters. Note, that the prompt isn't preprocessed in any
-	 * way, nothing like "User: ", "###Instruction", etc. is added.
-	 *
-	 * @return iterable LLM outputs
-	 */
-	public LlamaIterable generate(InferenceParameters parameters) {
-		return () -> new LlamaIterator(this, parameters);
-	}
+    /**
+     * Generate and stream outputs with custom inference parameters. Note, that the prompt isn't preprocessed in any
+     * way, nothing like "User: ", "###Instruction", etc. is added.
+     *
+     * @return iterable LLM outputs
+     */
+    public LlamaIterable generate(InferenceParameters parameters) {
+        return () -> new LlamaIterator(this, parameters);
+    }
 
-	/**
-	 * Get the embedding of a string. Note, that the prompt isn't preprocessed in any way, nothing like
-	 * "User: ", "###Instruction", etc. is added.
-	 *
-	 * @param prompt the string to embed
-	 * @return an embedding float array
-	 * @throws IllegalStateException if embedding mode was not activated (see
-	 *                               {@link ModelParameters#setEmbedding(boolean)})
-	 */
-	public native float[] embed(String prompt);
+    /**
+     * Get the embedding of a string. Note, that the prompt isn't preprocessed in any way, nothing like
+     * "User: ", "###Instruction", etc. is added.
+     *
+     * @param prompt the string to embed
+     * @return an embedding float array
+     * @throws IllegalStateException if embedding mode was not activated (see
+     *                               {@link ModelParameters#setEmbedding(boolean)})
+     */
+    public native float[] embed(String prompt);
 
-	/**
-	 * Tokenize a prompt given the native tokenizer
-	 *
-	 * @param prompt the prompt to tokenize
-	 * @return an array of integers each representing a token id
-	 */
-	public native int[] encode(String prompt);
+    /**
+     * Tokenize a prompt given the native tokenizer
+     *
+     * @param prompt the prompt to tokenize
+     * @return an array of integers each representing a token id
+     */
+    public native int[] encode(String prompt);
 
-	/**
-	 * Convert an array of token ids to its string representation
-	 *
-	 * @param tokens an array of tokens
-	 * @return the token ids decoded to a string
-	 */
-	public String decode(int[] tokens) {
-		byte[] bytes = decodeBytes(tokens);
-		return new String(bytes, StandardCharsets.UTF_8);
-	}
+    /**
+     * Convert an array of token ids to its string representation
+     *
+     * @param tokens an array of tokens
+     * @return the token ids decoded to a string
+     */
+    public String decode(int[] tokens) {
+        byte[] bytes = decodeBytes(tokens);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
 
-	/**
-	 * Sets a callback for native llama.cpp log messages.
-	 * Per default, log messages are written in JSON to stdout. Note, that in text mode the callback will be also
-	 * invoked with log messages of the GGML backend, while JSON mode can only access request log messages.
-	 * In JSON mode, GGML messages will still be written to stdout.
-	 * To only change the log format but keep logging to stdout, the given callback can be <code>null</code>.
-	 * To disable logging, pass an empty callback, i.e., <code>(level, msg) -> {}</code>.
-	 *
-	 * @param format the log format to use
-	 * @param callback a method to call for log messages
-	 */
-	public static native void setLogger(LogFormat format, @Nullable BiConsumer<LogLevel, String> callback);
+    /**
+     * Sets a callback for native llama.cpp log messages.
+     * Per default, log messages are written in JSON to stdout. Note, that in text mode the callback will be also
+     * invoked with log messages of the GGML backend, while JSON mode can only access request log messages.
+     * In JSON mode, GGML messages will still be written to stdout.
+     * To only change the log format but keep logging to stdout, the given callback can be <code>null</code>.
+     * To disable logging, pass an empty callback, i.e., <code>(level, msg) -> {}</code>.
+     *
+     * @param format   the log format to use
+     * @param callback a method to call for log messages
+     */
+    public static native void setLogger(LogFormat format, BiConsumer<LogLevel, String> callback);
 
-	@Override
-	public void close() {
-		delete();
-	}
+    @Override
+    public void close() {
+        delete();
+    }
 
-	// don't overload native methods since the C++ function names get nasty
-	native int requestCompletion(String params) throws LlamaException;
+    // don't overload native methods since the C++ function names get nasty
+    native int requestCompletion(String params) throws LlamaException;
 
-	native LlamaOutput receiveCompletion(int taskId) throws LlamaException;
+    native LlamaOutput receiveCompletion(int taskId) throws LlamaException;
 
-	native void cancelCompletion(int taskId);
+    native void cancelCompletion(int taskId);
 
-	native byte[] decodeBytes(int[] tokens);
+    native byte[] decodeBytes(int[] tokens);
 
-	private native void loadModel(String parameters) throws LlamaException;
+    private native void loadModel(String parameters) throws LlamaException;
+    private native void writeModel(String fname) throws LlamaException;
 
-	private native void delete();
+    private native void delete();
+
+
+    public String[] requestBatchCompletion(String[] prompts, InferenceParameters inferenceParameters) throws LlamaException {
+
+//        InferenceParameters currentInferenceParameters = inferenceParameters.clone(); // Might need to copy this if needed?
+        int[] taskIds = new int[prompts.length];
+        String[] outputs = new String[prompts.length];
+
+        for (int i = 0; i < prompts.length; i++) {
+            inferenceParameters.setPrompt(prompts[i]);
+            inferenceParameters.setStream(false);
+            taskIds[i] = requestCompletion(inferenceParameters.toString());
+        }
+
+        for (int i = 0; i < prompts.length; i++) {
+            outputs[i] = receiveCompletion(taskIds[i]).text;
+        }
+
+        return outputs;
+    }
 
 }
