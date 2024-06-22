@@ -661,3 +661,45 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_setLogger(JNIEnv *env, jc
         }
     }
 }
+
+JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadata(JNIEnv *env, jobject obj)
+{
+    jlong server_handle = env->GetLongField(obj, f_model_pointer);
+    auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
+    llama_model *model = ctx_server->model;
+
+    // Get the number of metadata key/value pairs
+    int32_t meta_count = llama_model_meta_count(model);
+    if (meta_count < 0)
+    {
+        env->ThrowNew(c_llama_error, "Failed to get metadata count");
+        return env->NewStringUTF("");
+    }
+
+    json meta_json;
+    for (int32_t i = 0; i < meta_count; ++i)
+    {
+        char key[256];   // Assuming keys are not longer than 255 characters
+        char value[256]; // Assuming values are not longer than 255 characters
+
+        // Get metadata key name by index
+        bool key_success = llama_model_meta_key_by_index(model, i, key, sizeof(key)) > 0;
+        // Get metadata value as a string by index
+        bool val_success = llama_model_meta_val_str_by_index(model, i, value, sizeof(value)) > 0;
+
+        if (key_success && val_success)
+        {
+            meta_json[key] = value;
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "Failed to get metadata key/value pair for index " << i;
+            log_callback_trampoline(GGML_LOG_LEVEL_WARN, ss.str().c_str(), nullptr);
+        }
+    }
+
+    // To get a string representation of the JSON object
+    std::string json_str = meta_json.dump();
+    return env->NewStringUTF(json_str.c_str());
+}

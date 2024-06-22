@@ -8,76 +8,84 @@
 extern "C" {
 #endif
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    embed
- * Signature: (Ljava/lang/String;)[F
+* Class:     de_kherud_llama_LlamaModel
+* Method:    embed
+* Signature: (Ljava/lang/String;)[F
  */
 JNIEXPORT jfloatArray JNICALL Java_de_kherud_llama_LlamaModel_embed
-  (JNIEnv *, jobject, jstring);
+    (JNIEnv *, jobject, jstring);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    encode
- * Signature: (Ljava/lang/String;)[I
+* Class:     de_kherud_llama_LlamaModel
+* Method:    encode
+* Signature: (Ljava/lang/String;)[I
  */
 JNIEXPORT jintArray JNICALL Java_de_kherud_llama_LlamaModel_encode
-  (JNIEnv *, jobject, jstring);
+    (JNIEnv *, jobject, jstring);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    setLogger
- * Signature: (Lde/kherud/llama/args/LogFormat;Ljava/util/function/BiConsumer;)V
+* Class:     de_kherud_llama_LlamaModel
+* Method:    setLogger
+* Signature: (Lde/kherud/llama/args/LogFormat;Ljava/util/function/BiConsumer;)V
  */
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_setLogger
-  (JNIEnv *, jclass, jobject, jobject);
+    (JNIEnv *, jclass, jobject, jobject);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    requestCompletion
- * Signature: (Ljava/lang/String;)I
+* Class:     de_kherud_llama_LlamaModel
+* Method:    requestCompletion
+* Signature: (Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_de_kherud_llama_LlamaModel_requestCompletion
-  (JNIEnv *, jobject, jstring);
+    (JNIEnv *, jobject, jstring);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    receiveCompletion
- * Signature: (I)Lde/kherud/llama/LlamaOutput;
+* Class:     de_kherud_llama_LlamaModel
+* Method:    receiveCompletion
+* Signature: (I)Lde/kherud/llama/LlamaOutput;
  */
 JNIEXPORT jobject JNICALL Java_de_kherud_llama_LlamaModel_receiveCompletion
-  (JNIEnv *, jobject, jint);
+    (JNIEnv *, jobject, jint);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    cancelCompletion
- * Signature: (I)V
+* Class:     de_kherud_llama_LlamaModel
+* Method:    cancelCompletion
+* Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_cancelCompletion
-  (JNIEnv *, jobject, jint);
+    (JNIEnv *, jobject, jint);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    decodeBytes
- * Signature: ([I)[B
+* Class:     de_kherud_llama_LlamaModel
+* Method:    decodeBytes
+* Signature: ([I)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_de_kherud_llama_LlamaModel_decodeBytes
-  (JNIEnv *, jobject, jintArray);
+    (JNIEnv *, jobject, jintArray);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    loadModel
- * Signature: (Ljava/lang/String;)V
+* Class:     de_kherud_llama_LlamaModel
+* Method:    loadModel
+* Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_loadModel
-  (JNIEnv *, jobject, jstring);
+    (JNIEnv *, jobject, jstring);
 
 /*
- * Class:     de_kherud_llama_LlamaModel
- * Method:    delete
- * Signature: ()V
+* Class:     de_kherud_llama_LlamaModel
+* Method:    getMetadata
+* Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadata
+    (JNIEnv *, jobject);
+
+/*
+* Class:     de_kherud_llama_LlamaModel
+* Method:    delete
+* Signature: ()V
  */
 JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete
-  (JNIEnv *, jobject);
+    (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

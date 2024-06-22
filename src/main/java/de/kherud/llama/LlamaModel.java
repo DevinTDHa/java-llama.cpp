@@ -124,7 +124,8 @@ public class LlamaModel implements AutoCloseable {
     native byte[] decodeBytes(int[] tokens);
 
     private native void loadModel(String parameters) throws LlamaException;
-    private native void writeModel(String fname) throws LlamaException;
+
+    public native String getMetadata();
 
     private native void delete();
 
