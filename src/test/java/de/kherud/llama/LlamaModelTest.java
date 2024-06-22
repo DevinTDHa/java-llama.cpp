@@ -20,12 +20,14 @@ public class LlamaModelTest {
 
     private static LlamaModel model;
 
+    private static String modelPath = "models/codellama-7b.Q2_K.gguf";
+
     @BeforeClass
     public static void setup() {
 //		LlamaModel.setLogger(LogFormat.TEXT, (level, msg) -> System.out.println(level + ": " + msg));
         model = new LlamaModel(
                 new ModelParameters()
-                        .setModelFilePath("models/codellama-7b.Q2_K.gguf")
+                        .setModelFilePath(modelPath)
 //						.setModelUrl("https://huggingface.co/TheBloke/CodeLlama-7B-GGUF/resolve/main/codellama-7b.Q2_K.gguf")
                         .setNGpuLayers(43)
                         .setEmbedding(true)
@@ -273,12 +275,15 @@ public class LlamaModelTest {
 
     @Test
     public void testGetMetadata() {
-        String jvmName = ManagementFactory.getRuntimeMXBean().getName();
-        String pid = jvmName.split("@")[0];
-        System.out.println("Running in PID: " + pid);
-
-
         String metadata = model.getMetadata();
+        System.out.println(metadata);
+        Assert.assertFalse(metadata.isEmpty());
+        Assert.assertNotEquals("null", metadata);
+    }
+
+    @Test
+    public void testGetMetadataFromFile() {
+        String metadata = LlamaModel.getMetadataFromFile(modelPath);
         System.out.println(metadata);
         Assert.assertFalse(metadata.isEmpty());
         Assert.assertNotEquals("null", metadata);

@@ -1,5 +1,6 @@
 #include "jllama.h"
 
+#include "ggml.h"
 #include "llama.h"
 #include "nlohmann/json.hpp"
 #include "server.hpp"
@@ -697,6 +698,53 @@ JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadata(JNIEnv *en
             ss << "Failed to get metadata key/value pair for index " << i;
             log_callback_trampoline(GGML_LOG_LEVEL_WARN, ss.str().c_str(), nullptr);
         }
+    }
+
+    // To get a string representation of the JSON object
+    std::string json_str = meta_json.dump();
+    return env->NewStringUTF(json_str.c_str());
+}
+
+/** Loads the metadata from a file and returns it as a JSON string.
+ *
+ * Reference: llama.cpp - llama_model_loader
+ */
+JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadataFromFile(JNIEnv *env, jclass /*LlamaModel*/,
+                                                                              jstring fname)
+{
+    struct ggml_context *ctx = nullptr;
+    struct gguf_init_params params = {
+        /*.no_alloc = */ true,
+        /*.ctx      = */ &ctx,
+    };
+
+    std::string fname_str = parse_jstring(env, fname);
+
+    struct gguf_context *meta = gguf_init_from_file(fname_str.c_str(), params);
+    if (!meta)
+    {
+        env->ThrowNew(c_llama_error, "Failed to load metadata file");
+        return env->NewStringUTF("");
+    }
+
+    // Get Metadata
+    json meta_json;
+
+    int n_kv = gguf_get_n_kv(meta);
+    for (int i = 0; i < n_kv; i++)
+    {
+        const char *name = gguf_get_key(meta, i);
+        std::string value = gguf_kv_to_str(meta, i);
+        const size_t MAX_VALUE_LEN = 40;
+        if (value.size() > MAX_VALUE_LEN)
+        {
+            std::ostringstream oss;
+            oss << value.substr(0, MAX_VALUE_LEN - 3) << "...";
+            value = oss.str();
+        }
+        replace_all(value, "\n", "\\n");
+
+        meta_json[name] = value;
     }
 
     // To get a string representation of the JSON object

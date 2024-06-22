@@ -81,6 +81,14 @@ JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadata
 
 /*
 * Class:     de_kherud_llama_LlamaModel
+* Method:    getMetadataFromFile
+* Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadataFromFile
+    (JNIEnv *, jclass, jstring);
+
+/*
+* Class:     de_kherud_llama_LlamaModel
 * Method:    delete
 * Signature: ()V
  */

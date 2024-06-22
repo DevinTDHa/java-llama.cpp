@@ -125,7 +125,20 @@ public class LlamaModel implements AutoCloseable {
 
     private native void loadModel(String parameters) throws LlamaException;
 
+    /**
+     * Gets the metadata of the loaded model.
+     *
+     * @return A String of the metadata as JSON
+     */
     public native String getMetadata();
+
+    /**
+     * Gets the metadata of the model from the provided filename.
+     *
+     * @param fname the filename of the model
+     * @return A String of the metadata as JSON
+     */
+    static public native String getMetadataFromFile(String fname);
 
     private native void delete();
 
