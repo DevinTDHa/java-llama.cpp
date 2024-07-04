@@ -1,4 +1,4 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 class LlamaException extends RuntimeException {
 

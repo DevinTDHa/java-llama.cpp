@@ -173,10 +173,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     }
 
     // find classes
-    c_llama_model = env->FindClass("de/kherud/llama/LlamaModel");
-    c_llama_iterator = env->FindClass("de/kherud/llama/LlamaIterator");
+    c_llama_model = env->FindClass("com/johnsnowlabs/nlp/llama/LlamaModel");
+    c_llama_iterator = env->FindClass("com/johnsnowlabs/nlp/llama/LlamaIterator");
     c_standard_charsets = env->FindClass("java/nio/charset/StandardCharsets");
-    c_output = env->FindClass("de/kherud/llama/LlamaOutput");
+    c_output = env->FindClass("com/johnsnowlabs/nlp/llama/LlamaOutput");
     c_string = env->FindClass("java/lang/String");
     c_hash_map = env->FindClass("java/util/HashMap");
     c_map = env->FindClass("java/util/Map");
@@ -186,9 +186,9 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     c_integer = env->FindClass("java/lang/Integer");
     c_float = env->FindClass("java/lang/Float");
     c_biconsumer = env->FindClass("java/util/function/BiConsumer");
-    c_llama_error = env->FindClass("de/kherud/llama/LlamaException");
-    c_log_level = env->FindClass("de/kherud/llama/LogLevel");
-    c_log_format = env->FindClass("de/kherud/llama/args/LogFormat");
+    c_llama_error = env->FindClass("com/johnsnowlabs/nlp/llama/LlamaException");
+    c_log_level = env->FindClass("com/johnsnowlabs/nlp/llama/LogLevel");
+    c_log_format = env->FindClass("com/johnsnowlabs/nlp/llama/args/LogFormat");
     c_error_oom = env->FindClass("java/lang/OutOfMemoryError");
 
     if (!(c_llama_model && c_llama_iterator && c_standard_charsets && c_output && c_string && c_hash_map && c_map &&
@@ -251,12 +251,12 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
     f_task_id = env->GetFieldID(c_llama_iterator, "taskId", "I");
     f_utf_8 = env->GetStaticFieldID(c_standard_charsets, "UTF_8", "Ljava/nio/charset/Charset;");
     f_iter_has_next = env->GetFieldID(c_llama_iterator, "hasNext", "Z");
-    f_log_level_debug = env->GetStaticFieldID(c_log_level, "DEBUG", "Lde/kherud/llama/LogLevel;");
-    f_log_level_info = env->GetStaticFieldID(c_log_level, "INFO", "Lde/kherud/llama/LogLevel;");
-    f_log_level_warn = env->GetStaticFieldID(c_log_level, "WARN", "Lde/kherud/llama/LogLevel;");
-    f_log_level_error = env->GetStaticFieldID(c_log_level, "ERROR", "Lde/kherud/llama/LogLevel;");
-    f_log_format_json = env->GetStaticFieldID(c_log_format, "JSON", "Lde/kherud/llama/args/LogFormat;");
-    f_log_format_text = env->GetStaticFieldID(c_log_format, "TEXT", "Lde/kherud/llama/args/LogFormat;");
+    f_log_level_debug = env->GetStaticFieldID(c_log_level, "DEBUG", "Lcom/johnsnowlabs/nlp/llama/LogLevel;");
+    f_log_level_info = env->GetStaticFieldID(c_log_level, "INFO", "Lcom/johnsnowlabs/nlp/llama/LogLevel;");
+    f_log_level_warn = env->GetStaticFieldID(c_log_level, "WARN", "Lcom/johnsnowlabs/nlp/llama/LogLevel;");
+    f_log_level_error = env->GetStaticFieldID(c_log_level, "ERROR", "Lcom/johnsnowlabs/nlp/llama/LogLevel;");
+    f_log_format_json = env->GetStaticFieldID(c_log_format, "JSON", "Lcom/johnsnowlabs/nlp/llama/args/LogFormat;");
+    f_log_format_text = env->GetStaticFieldID(c_log_format, "TEXT", "Lcom/johnsnowlabs/nlp/llama/args/LogFormat;");
 
     if (!(f_model_pointer && f_task_id && f_utf_8 && f_iter_has_next && f_log_level_debug && f_log_level_info &&
           f_log_level_warn && f_log_level_error && f_log_format_json && f_log_format_text))
@@ -353,7 +353,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
     llama_backend_free();
 }
 
-JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_loadModel(JNIEnv *env, jobject obj, jstring jparams)
+JNIEXPORT void JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_loadModel(JNIEnv *env, jobject obj, jstring jparams)
 {
     gpt_params params;
     server_params sparams;
@@ -467,7 +467,7 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_loadModel(JNIEnv *env, jo
     env->SetLongField(obj, f_model_pointer, reinterpret_cast<jlong>(ctx_server));
 }
 
-JNIEXPORT jint JNICALL Java_de_kherud_llama_LlamaModel_requestCompletion(JNIEnv *env, jobject obj, jstring jparams)
+JNIEXPORT jint JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_requestCompletion(JNIEnv *env, jobject obj, jstring jparams)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -491,7 +491,7 @@ JNIEXPORT jint JNICALL Java_de_kherud_llama_LlamaModel_requestCompletion(JNIEnv 
     return id_task;
 }
 
-JNIEXPORT jobject JNICALL Java_de_kherud_llama_LlamaModel_receiveCompletion(JNIEnv *env, jobject obj, jint id_task)
+JNIEXPORT jobject JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_receiveCompletion(JNIEnv *env, jobject obj, jint id_task)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -536,7 +536,7 @@ JNIEXPORT jobject JNICALL Java_de_kherud_llama_LlamaModel_receiveCompletion(JNIE
     return env->NewObject(c_output, cc_output, jbytes, o_probabilities, result.stop);
 }
 
-JNIEXPORT jfloatArray JNICALL Java_de_kherud_llama_LlamaModel_embed(JNIEnv *env, jobject obj, jstring jprompt)
+JNIEXPORT jfloatArray JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_embed(JNIEnv *env, jobject obj, jstring jprompt)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -578,7 +578,7 @@ JNIEXPORT jfloatArray JNICALL Java_de_kherud_llama_LlamaModel_embed(JNIEnv *env,
     return j_embedding;
 }
 
-JNIEXPORT jintArray JNICALL Java_de_kherud_llama_LlamaModel_encode(JNIEnv *env, jobject obj, jstring jprompt)
+JNIEXPORT jintArray JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_encode(JNIEnv *env, jobject obj, jstring jprompt)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -599,7 +599,7 @@ JNIEXPORT jintArray JNICALL Java_de_kherud_llama_LlamaModel_encode(JNIEnv *env, 
     return java_tokens;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_de_kherud_llama_LlamaModel_decodeBytes(JNIEnv *env, jobject obj,
+JNIEXPORT jbyteArray JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_decodeBytes(JNIEnv *env, jobject obj,
                                                                          jintArray java_tokens)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
@@ -615,7 +615,7 @@ JNIEXPORT jbyteArray JNICALL Java_de_kherud_llama_LlamaModel_decodeBytes(JNIEnv 
     return parse_jbytes(env, text);
 }
 
-JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete(JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_delete(JNIEnv *env, jobject obj)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -623,7 +623,7 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_delete(JNIEnv *env, jobje
     delete ctx_server;
 }
 
-JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_cancelCompletion(JNIEnv *env, jobject obj, jint id_task)
+JNIEXPORT void JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_cancelCompletion(JNIEnv *env, jobject obj, jint id_task)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -631,7 +631,7 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_cancelCompletion(JNIEnv *
     ctx_server->queue_results.remove_waiting_task_id(id_task);
 }
 
-JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_setLogger(JNIEnv *env, jclass clazz, jobject log_format,
+JNIEXPORT void JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_setLogger(JNIEnv *env, jclass clazz, jobject log_format,
                                                                  jobject jcallback)
 {
     if (o_log_callback != nullptr)
@@ -663,7 +663,7 @@ JNIEXPORT void JNICALL Java_de_kherud_llama_LlamaModel_setLogger(JNIEnv *env, jc
     }
 }
 
-JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadata(JNIEnv *env, jobject obj)
+JNIEXPORT jstring JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_getMetadata(JNIEnv *env, jobject obj)
 {
     jlong server_handle = env->GetLongField(obj, f_model_pointer);
     auto *ctx_server = reinterpret_cast<server_context *>(server_handle); // NOLINT(*-no-int-to-ptr)
@@ -709,7 +709,7 @@ JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadata(JNIEnv *en
  *
  * Reference: llama.cpp - llama_model_loader
  */
-JNIEXPORT jstring JNICALL Java_de_kherud_llama_LlamaModel_getMetadataFromFile(JNIEnv *env, jclass /*LlamaModel*/,
+JNIEXPORT jstring JNICALL Java_com_johnsnowlabs_nlp_llama_LlamaModel_getMetadataFromFile(JNIEnv *env, jclass /*LlamaModel*/,
                                                                               jstring fname)
 {
     struct ggml_context *ctx = nullptr;

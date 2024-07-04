@@ -31,7 +31,7 @@ hs_err_pid*
 replay_pid*
 
 models/*.gguf
-src/main/cpp/de_kherud_llama_*.h
+src/main/cpp/com_johnsnowlabs_nlp_llama_*.h
 src/main/resources/**/*.so
 src/main/resources/**/*.dylib
 src/main/resources/**/*.dll

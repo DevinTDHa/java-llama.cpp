@@ -14,7 +14,7 @@
  *  limitations under the License.
  *--------------------------------------------------------------------------*/
 
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -235,7 +235,7 @@ class OSInfo {
 	}
 
 	static String getArchName() {
-		String override = System.getProperty("de.kherud.llama.osinfo.architecture");
+		String override = System.getProperty("com.johnsnowlabs.nlp.llama.osinfo.architecture");
 		if (override != null) {
 			return override;
 		}

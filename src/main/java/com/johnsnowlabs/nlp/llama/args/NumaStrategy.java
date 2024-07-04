@@ -1,4 +1,4 @@
-package de.kherud.llama.args;
+package com.johnsnowlabs.nlp.llama.args;
 
 public enum NumaStrategy {
 

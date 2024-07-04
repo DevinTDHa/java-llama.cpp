@@ -1,153 +1,133 @@
-name: Release to Maven Central
-on:
-  workflow_dispatch:
-    inputs:
-      build_only:
-        description: 'Whether to only build the project and skip releasing it (yes/NO)'
-        required: false
-        default: 'no'
-  release:
-    types: [ created ]
-env:
-  MODEL_URL: "https://huggingface.co/TheBloke/CodeLlama-7B-GGUF/resolve/main/codellama-7b.Q2_K.gguf"
-  MODEL_NAME: "codellama-7b.Q2_K.gguf"
-jobs:
-
-
-  build-linux-docker:
-    name: Build ${{ matrix.target.os }}-${{ matrix.target.arch }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - {
-            os: Linux,
-            arch: x86_64,
-            image: dockcross-manylinux2014-x64,
-          }
-          - {
-            os: Linux,
-            arch: aarch64,
-            image: dockcross-linux-arm64-lts,
-          }
-          - {
-            os: Linux-Android,
-            arch: aarch64,
-            image: dockcross-android-arm64,
-          }
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build libraries
-        shell: bash
-        run: |
-          .github/dockcross/${{ matrix.target.image }} .github/build.sh "-DOS_NAME=${{ matrix.target.os }} -DOS_ARCH=${{ matrix.target.arch }}"
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts
-          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
-
-
-  build-macos-native:
-    name: Build ${{ matrix.target.runner }}
-    runs-on: ${{ matrix.target.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - {
-            runner: macos-13,
-            cmake: '-DLLAMA_METAL=OFF'
-          }
-          - {
-            runner: macos-14,
-            cmake: '-DLLAMA_METAL_EMBED_LIBRARY=ON'
-          }
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build libraries
-        shell: bash
-        run: |
-          mvn compile
-          .github/build.sh ${{ matrix.target.cmake }}
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts
-          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
-
-
-  build-win-native:
-    name: Build ${{ matrix.target.os }}-${{ matrix.target.arch }}
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - {
-            os: Windows,
-            arch: x86_64,
-            cmake: '-G "Visual Studio 17 2022" -A "x64"'
-          }
-          - {
-            os: Windows,
-            arch: aarch64,
-            cmake: '-G "Visual Studio 17 2022" -A "ARM64"'
-          }
-          - {
-            os: Windows,
-            arch: x86,
-            cmake: '-G "Visual Studio 17 2022" -A "Win32"'
-          }
-          - {
-            os: Windows,
-            arch: arm,
-            cmake: '-G "Visual Studio 17 2022" -A "ARM"'
-          }
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build libraries
-        shell: cmd
-        run: |
-          .github\build.bat ${{ matrix.target.cmake }} -DOS_NAME=${{ matrix.target.os }} -DOS_ARCH=${{ matrix.target.arch }}
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: artifacts
-          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
-
-
-  test-linux:
-    name: Test Linux
-    needs: build-linux-docker
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
-      - name: Download model
-        run: curl -L ${MODEL_URL} --create-dirs -o models/${MODEL_NAME}
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-      - name: Run tests
-        run: mvn test
-
-  # disabled for now, we don't have access to a macos arm64 runner and testing on x86_64 doesn't work
-#  test-macos:
-#    name: Test Mac
-#    needs: build-macos-native
-#    runs-on: macos-latest
+#name: Release to Maven Central
+#on:
+#  workflow_dispatch:
+#    inputs:
+#      build_only:
+#        description: 'Whether to only build the project and skip releasing it (yes/NO)'
+#        required: false
+#        default: 'no'
+#  release:
+#    types: [ created ]
+#env:
+#  MODEL_URL: "https://huggingface.co/TheBloke/CodeLlama-7B-GGUF/resolve/main/codellama-7b.Q2_K.gguf"
+#  MODEL_NAME: "codellama-7b.Q2_K.gguf"
+#jobs:
+#
+#
+#  build-linux-docker:
+#    name: Build ${{ matrix.target.os }}-${{ matrix.target.arch }}
+#    runs-on: ubuntu-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        target:
+#          - {
+#            os: Linux,
+#            arch: x86_64,
+#            image: dockcross-manylinux2014-x64,
+#          }
+#          - {
+#            os: Linux,
+#            arch: aarch64,
+#            image: dockcross-linux-arm64-lts,
+#          }
+#          - {
+#            os: Linux-Android,
+#            arch: aarch64,
+#            image: dockcross-android-arm64,
+#          }
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Build libraries
+#        shell: bash
+#        run: |
+#          .github/dockcross/${{ matrix.target.image }} .github/build.sh "-DOS_NAME=${{ matrix.target.os }} -DOS_ARCH=${{ matrix.target.arch }}"
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: artifacts
+#          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
+#
+#
+#  build-macos-native:
+#    name: Build ${{ matrix.target.runner }}
+#    runs-on: ${{ matrix.target.runner }}
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        target:
+#          - {
+#            runner: macos-13,
+#            cmake: '-DLLAMA_METAL=OFF'
+#          }
+#          - {
+#            runner: macos-14,
+#            cmake: '-DLLAMA_METAL_EMBED_LIBRARY=ON'
+#          }
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Build libraries
+#        shell: bash
+#        run: |
+#          mvn compile
+#          .github/build.sh ${{ matrix.target.cmake }}
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: artifacts
+#          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
+#
+#
+#  build-win-native:
+#    name: Build ${{ matrix.target.os }}-${{ matrix.target.arch }}
+#    runs-on: windows-latest
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        target:
+#          - {
+#            os: Windows,
+#            arch: x86_64,
+#            cmake: '-G "Visual Studio 17 2022" -A "x64"'
+#          }
+#          - {
+#            os: Windows,
+#            arch: aarch64,
+#            cmake: '-G "Visual Studio 17 2022" -A "ARM64"'
+#          }
+#          - {
+#            os: Windows,
+#            arch: x86,
+#            cmake: '-G "Visual Studio 17 2022" -A "Win32"'
+#          }
+#          - {
+#            os: Windows,
+#            arch: arm,
+#            cmake: '-G "Visual Studio 17 2022" -A "ARM"'
+#          }
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Build libraries
+#        shell: cmd
+#        run: |
+#          .github\build.bat ${{ matrix.target.cmake }} -DOS_NAME=${{ matrix.target.os }} -DOS_ARCH=${{ matrix.target.arch }}
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: artifacts
+#          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
+#
+#
+#  test-linux:
+#    name: Test Linux
+#    needs: build-linux-docker
+#    runs-on: ubuntu-latest
 #    steps:
 #      - uses: actions/checkout@v4
 #      - uses: actions/download-artifact@v3
 #        with:
 #          name: artifacts
-#          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
+#          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
 #      - name: Download model
 #        run: curl -L ${MODEL_URL} --create-dirs -o models/${MODEL_NAME}
 #      - uses: actions/setup-java@v4
@@ -156,51 +136,71 @@ jobs:
 #          java-version: '11'
 #      - name: Run tests
 #        run: mvn test
-
-
-  test-windows:
-    name: Test Windows
-    needs: build-win-native
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
-      - name: Download model
-        run: curl -L $env:MODEL_URL --create-dirs -o models/$env:MODEL_NAME
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '11'
-      - name: Run tests
-        run: mvn test
-
-
-  publish:
-    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_only == 'no' }}
-    needs: [ test-linux,build-macos-native,test-windows ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifacts
-          path: ${{ github.workspace }}/src/main/resources/de/kherud/llama/
-      - name: Set up Maven Central Repository
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-          server-id: ossrh
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
-      - name: Publish package
-        run: mvn --batch-mode -P release -Dmaven.test.skip=true deploy
-        env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#
+#  # disabled for now, we don't have access to a macos arm64 runner and testing on x86_64 doesn't work
+##  test-macos:
+##    name: Test Mac
+##    needs: build-macos-native
+##    runs-on: macos-latest
+##    steps:
+##      - uses: actions/checkout@v4
+##      - uses: actions/download-artifact@v3
+##        with:
+##          name: artifacts
+##          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
+##      - name: Download model
+##        run: curl -L ${MODEL_URL} --create-dirs -o models/${MODEL_NAME}
+##      - uses: actions/setup-java@v4
+##        with:
+##          distribution: 'zulu'
+##          java-version: '11'
+##      - name: Run tests
+##        run: mvn test
+#
+#
+#  test-windows:
+#    name: Test Windows
+#    needs: build-win-native
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: artifacts
+#          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
+#      - name: Download model
+#        run: curl -L $env:MODEL_URL --create-dirs -o models/$env:MODEL_NAME
+#      - uses: actions/setup-java@v4
+#        with:
+#          distribution: 'zulu'
+#          java-version: '11'
+#      - name: Run tests
+#        run: mvn test
+#
+#
+#  publish:
+#    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.build_only == 'no' }}
+#    needs: [ test-linux,build-macos-native,test-windows ]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: artifacts
+#          path: ${{ github.workspace }}/src/main/resources/com/johnsnowlabs/nlp/llama/
+#      - name: Set up Maven Central Repository
+#        uses: actions/setup-java@v3
+#        with:
+#          java-version: '17'
+#          distribution: 'zulu'
+#          server-id: ossrh
+#          server-username: MAVEN_USERNAME
+#          server-password: MAVEN_PASSWORD
+#          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
+#          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+#      - name: Publish package
+#        run: mvn --batch-mode -P release -Dmaven.test.skip=true deploy
+#        env:
+#          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+#          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

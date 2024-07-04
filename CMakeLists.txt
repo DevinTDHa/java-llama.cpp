@@ -35,7 +35,7 @@ if(NOT DEFINED OS_NAME)
     find_package(Java REQUIRED)
     find_program(JAVA_EXECUTABLE NAMES java)
 	execute_process(
-      COMMAND ${JAVA_EXECUTABLE} -cp ${CMAKE_SOURCE_DIR}/target/classes de.kherud.llama.OSInfo --os
+      COMMAND ${JAVA_EXECUTABLE} -cp ${CMAKE_SOURCE_DIR}/target/classes com.johnsnowlabs.nlp.llama.OSInfo --os
       OUTPUT_VARIABLE OS_NAME
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -49,7 +49,7 @@ if(NOT DEFINED OS_ARCH)
     find_package(Java REQUIRED)
     find_program(JAVA_EXECUTABLE NAMES java)
     execute_process(
-      COMMAND ${JAVA_EXECUTABLE} -cp ${CMAKE_SOURCE_DIR}/target/classes de.kherud.llama.OSInfo --arch
+      COMMAND ${JAVA_EXECUTABLE} -cp ${CMAKE_SOURCE_DIR}/target/classes com.johnsnowlabs.nlp.llama.OSInfo --arch
       OUTPUT_VARIABLE OS_ARCH
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -58,7 +58,7 @@ if(NOT OS_ARCH)
     message(FATAL_ERROR "Could not determine CPU architecture")
 endif()
 
-set(JLLAMA_DIR ${CMAKE_SOURCE_DIR}/src/main/resources/de/kherud/llama/${OS_NAME}/${OS_ARCH})
+set(JLLAMA_DIR ${CMAKE_SOURCE_DIR}/src/main/resources/com/johnsnowlabs/nlp/llama/${OS_NAME}/${OS_ARCH})
 message(STATUS "Installing files to ${JLLAMA_DIR}")
 
 # include jni.h and jni_md.h

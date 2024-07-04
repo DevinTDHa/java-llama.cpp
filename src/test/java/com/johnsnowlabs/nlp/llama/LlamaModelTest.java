@@ -1,6 +1,6 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
-import de.kherud.llama.args.LogFormat;
+import com.johnsnowlabs.nlp.llama.args.LogFormat;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.regex.Pattern;
 

@@ -1,4 +1,4 @@
-package de.kherud.llama.args;
+package com.johnsnowlabs.nlp.llama.args;
 
 /**
  * The log output format (defaults to JSON for all server-based outputs).

@@ -1,4 +1,4 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 /**
  * This enum represents the native log levels of llama.cpp.

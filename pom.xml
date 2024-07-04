@@ -1,15 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>de.kherud</groupId>
-	<artifactId>llama</artifactId>
-	<version>3.2.1</version>
+	<groupId>com.johnsnowlabs.nlp</groupId>
+	<artifactId>jsl-llama</artifactId>
+	<version>1.0.0-rc1</version>
 	<packaging>jar</packaging>
 
 	<name>${project.groupId}:${project.artifactId}</name>
-	<description>Java Bindings for llama.cpp - A Port of Facebook's LLaMA model in C/C++.</description>
-	<url>https://github.com/kherud/java-llama.cpp</url>
+	<description>Java llama.cpp bindings for Spark NLP</description>
+	<url>https://github.com/JohnSnowLabs/jsl-llama.cpp</url>
 
 	<licenses>
 		<license>
@@ -20,16 +19,16 @@
 
 	<developers>
 		<developer>
-			<name>Konstantin Herud</name>
-			<email>konstantin.herud@gmail.com</email>
-			<organizationUrl>https://github.com/kherud</organizationUrl>
+			<name>Devin Ha</name>
+			<email>t.ha@tu-berlin.de</email>
+			<organizationUrl>https://github.com/DevinTDHa</organizationUrl>
 		</developer>
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://github.com/kherud/java-llama.cpp.git</connection>
-		<developerConnection>scm:git:ssh://github.com:kherud/java-llama.cpp.git</developerConnection>
-		<url>https://github.com/kherud/java-llama.cpp/tree/master</url>
+		<connection>scm:git:git://github.com:JohnSnowLabs/jsl-llama.cpp.git</connection>
+		<developerConnection>scm:git:ssh://github.com:JohnSnowLabs/jsl-llama.cpp.git</developerConnection>
+		<url>https://github.com/JohnSnowLabs/jsl-llama.cpp/tree/main</url>
 	</scm>
 
 	<distributionManagement>

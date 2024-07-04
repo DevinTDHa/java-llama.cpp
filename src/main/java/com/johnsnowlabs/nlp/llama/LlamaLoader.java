@@ -14,7 +14,7 @@
  *  limitations under the License.
  *--------------------------------------------------------------------------*/
 
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Set the system properties, de.kherud.llama.lib.path, de.kherud.llama.lib.name, appropriately so that the
+ * Set the system properties, com.johnsnowlabs.nlp.llama.lib.path, com.johnsnowlabs.nlp.llama.lib.name, appropriately so that the
  * library can find *.dll, *.dylib and *.so files, according to the current OS (win, linux, mac).
  *
  * <p>The library files are automatically extracted from this project's package (JAR).
@@ -96,13 +96,13 @@ class LlamaLoader {
 	private static void loadNativeLibrary(String name) {
 		List<String> triedPaths = new LinkedList<>();
 
-		// Try loading library from de.kherud.llama.lib.path library path
-		String nativeLibName = System.getProperty("de.kherud.llama.lib.name");
+		// Try loading library from com.johnsnowlabs.nlp.llama.lib.path library path
+		String nativeLibName = System.getProperty("com.johnsnowlabs.nlp.llama.lib.name");
 		if (nativeLibName == null) {
 			nativeLibName = System.mapLibraryName(name);
 		}
 
-		String nativeLibPath = System.getProperty("de.kherud.llama.lib.path");
+		String nativeLibPath = System.getProperty("com.johnsnowlabs.nlp.llama.lib.path");
 		if (nativeLibPath != null) {
 			Path path = Paths.get(nativeLibPath, nativeLibName);
 			if (loadNativeLibrary(path)) {
@@ -264,7 +264,7 @@ class LlamaLoader {
 	}
 
 	private static File getTempDir() {
-		return new File(System.getProperty("de.kherud.llama.tmpdir", System.getProperty("java.io.tmpdir")));
+		return new File(System.getProperty("com.johnsnowlabs.nlp.llama.tmpdir", System.getProperty("java.io.tmpdir")));
 	}
 
 	private static String getNativeResourcePath() {

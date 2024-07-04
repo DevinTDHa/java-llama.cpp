@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-import de.kherud.llama.InferenceParameters;
-import de.kherud.llama.LlamaModel;
-import de.kherud.llama.LlamaOutput;
-import de.kherud.llama.ModelParameters;
-import de.kherud.llama.args.MiroStat;
+import com.johnsnowlabs.nlp.llama.InferenceParameters;
+import com.johnsnowlabs.nlp.llama.LlamaModel;
+import com.johnsnowlabs.nlp.llama.LlamaOutput;
+import com.johnsnowlabs.nlp.llama.ModelParameters;
+import com.johnsnowlabs.nlp.llama.args.MiroStat;
 
 @SuppressWarnings("InfiniteLoopStatement")
 public class MainExample {

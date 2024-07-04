@@ -1,11 +1,11 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 import java.util.Map;
 
-import de.kherud.llama.args.GpuSplitMode;
-import de.kherud.llama.args.NumaStrategy;
-import de.kherud.llama.args.PoolingType;
-import de.kherud.llama.args.RopeScalingType;
+import com.johnsnowlabs.nlp.llama.args.GpuSplitMode;
+import com.johnsnowlabs.nlp.llama.args.PoolingType;
+import com.johnsnowlabs.nlp.llama.args.NumaStrategy;
+import com.johnsnowlabs.nlp.llama.args.RopeScalingType;
 
 /***
  * Parameters used for initializing a {@link LlamaModel}.

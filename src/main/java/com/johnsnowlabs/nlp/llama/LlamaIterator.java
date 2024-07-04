@@ -1,4 +1,4 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 import java.lang.annotation.Native;
 import java.util.Iterator;

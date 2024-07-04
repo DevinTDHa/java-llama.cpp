@@ -1,6 +1,6 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
-import de.kherud.llama.args.LogFormat;
+import com.johnsnowlabs.nlp.llama.args.LogFormat;
 
 import java.lang.annotation.Native;
 import java.nio.charset.StandardCharsets;

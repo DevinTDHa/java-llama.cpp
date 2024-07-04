@@ -1,10 +1,10 @@
-package de.kherud.llama;
+package com.johnsnowlabs.nlp.llama;
 
 import java.util.Collection;
 import java.util.Map;
 
-import de.kherud.llama.args.MiroStat;
-import de.kherud.llama.args.Sampler;
+import com.johnsnowlabs.nlp.llama.args.MiroStat;
+import com.johnsnowlabs.nlp.llama.args.Sampler;
 
 /**
  * Parameters used throughout inference of a {@link LlamaModel}, e.g., {@link LlamaModel#generate(InferenceParameters)}

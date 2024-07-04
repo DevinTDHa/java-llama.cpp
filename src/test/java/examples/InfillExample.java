@@ -1,9 +1,9 @@
 package examples;
 
-import de.kherud.llama.InferenceParameters;
-import de.kherud.llama.LlamaModel;
-import de.kherud.llama.LlamaOutput;
-import de.kherud.llama.ModelParameters;
+import com.johnsnowlabs.nlp.llama.InferenceParameters;
+import com.johnsnowlabs.nlp.llama.LlamaModel;
+import com.johnsnowlabs.nlp.llama.LlamaOutput;
+import com.johnsnowlabs.nlp.llama.ModelParameters;
 
 public class InfillExample {
 

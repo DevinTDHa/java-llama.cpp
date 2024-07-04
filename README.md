@@ -26,7 +26,7 @@ Access this library via Maven:
 
 ```xml
 <dependency>
-    <groupId>de.kherud</groupId>
+    <groupId>com.johnsnowlabs.ml</groupId>
     <artifactId>llama</artifactId>
     <version>3.2.1</version>
 </dependency>
@@ -84,7 +84,7 @@ cmake --build . --config Release
 All required files will be put in a resources directory matching your platform, which will appear in the cmake output. For example something like:
 
 ```shell
---  Installing files to /java-llama.cpp/src/main/resources/de/kherud/llama/Linux/x86_64
+--  Installing files to /java-llama.cpp/src/main/resources/com/johnsnowlabs/nlp/llama/Linux/x86_64
 ```
 
 This includes:
@@ -101,13 +101,13 @@ as a Maven dependency, see below how to set the necessary paths in order for Jav
 This repository provides default support for CPU based inference. You can compile `llama.cpp` any way you want, however (see [Setup Required](#setup-required)).
 In order to use your self-compiled library, set either of the [JVM options](https://www.jetbrains.com/help/idea/tuning-the-ide.html#configure-jvm-options):
 
-- `de.kherud.llama.lib.path`, for example `-Dde.kherud.llama.lib.path=/directory/containing/lib`
+- `com.johnsnowlabs.nlp.llama.lib.path`, for example `-Dcom.johnsnowlabs.nlp.llama.lib.path=/directory/containing/lib`
 - `java.library.path`, for example `-Djava.library.path=/directory/containing/lib`
 
 This repository uses [`System#mapLibraryName`](https://docs.oracle.com/javase%2F7%2Fdocs%2Fapi%2F%2F/java/lang/System.html) to determine the name of the shared library for you platform.
 If for any reason your library has a different name, you can set it with
 
-- `de.kherud.llama.lib.name`, for example `-Dde.kherud.llama.lib.name=myname.so`
+- `com.johnsnowlabs.nlp.llama.lib.name`, for example `-Dcom.johnsnowlabs.nlp.llama.lib.name=myname.so`
 
 For compiling `llama.cpp`, refer to the official [readme](https://github.com/ggerganov/llama.cpp#build) for details.
 The library can be built with the `llama.cpp` project:
@@ -240,58 +240,4 @@ LlamaModel.setLogger(LogFormat.TEXT, (level, message) -> System.out.println(leve
 LlamaModel.setLogger(LogFormat.TEXT, null);
 // Disable logging by passing a no-op
 LlamaModel.setLogger(null, (level, message) -> {});
-```
-
-## Importing in Android
-
-You can use this library in Android project.
-1. Add java-llama.cpp as a submodule in your android `app` project directory
-```shell
-git submodule add https://github.com/kherud/java-llama.cpp 
-```
-2. Declare the library as a source in your build.gradle
-```gradle
-android {
-    val jllamaLib = file("java-llama.cpp")
-
-    // Execute "mvn compile" if folder target/ doesn't exist at ./java-llama.cpp/
-    if (!file("$jllamaLib/target").exists()) {
-        exec {
-            commandLine = listOf("mvn", "compile")
-            workingDir = file("java-llama.cpp/")
-        }
-    }
-
-    ...
-    defaultConfig {
-	...
-        externalNativeBuild {
-            cmake {
-		// Add an flags if needed
-                cppFlags += ""
-                arguments += ""
-            }
-        }
-    }
-
-    // Declare c++ sources
-    externalNativeBuild {
-        cmake {
-            path = file("$jllamaLib/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
-
-    // Declare java sources
-    sourceSets {
-        named("main") {
-            // Add source directory for java-llama.cpp
-            java.srcDir("$jllamaLib/src/main/java")
-        }
-    }
-}
-```
-3. Exclude `de.kherud.llama` in proguard-rules.pro
-```proguard
-keep class de.kherud.llama.** { *; }
 ```

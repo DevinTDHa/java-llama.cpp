@@ -2530,7 +2530,7 @@ struct server_context
     }
 };
 
-// parse the given jparams (see de.kherud.llama.args.ModelParameters#toString()) from JSON to the required C++ struct.
+// parse the given jparams (see com.johnsnowlabs.nlp.llama.args.ModelParameters#toString()) from JSON to the required C++ struct.
 static void server_params_parse(json jparams, server_params &sparams, gpt_params &params)
 {
     gpt_params default_params;
