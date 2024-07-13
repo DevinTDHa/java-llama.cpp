@@ -45,6 +45,9 @@ compileLlamaCpp := {
   }
 }
 
+// Compile commands in sbt depend on llama.cpp compilation
+(Compile / compile) := ((Compile / compile) dependsOn compileLlamaCpp).value
+
 // Jar Folders
 //if (is_m1.equals("true"))
 //  unmanagedBase := baseDirectory.value / "m1-jar"
