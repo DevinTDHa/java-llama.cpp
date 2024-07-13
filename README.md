@@ -1,82 +1,57 @@
-![Java 11+](https://img.shields.io/badge/Java-11%2B-informational)
-![llama.cpp b3008](https://img.shields.io/badge/llama.cpp-%23b3008-informational)
+# Spark NLP Java Bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
 
-# Java Bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
+## Publishing
 
-The main goal of llama.cpp is to run the LLaMA model using 4-bit integer quantization on a MacBook.
-This repository provides Java bindings for the C++ library.
-
-**You are welcome to contribute**
-
-1. [Quick Start](#quick-start)  
-    1.1 [No Setup required](#no-setup-required)   
-    1.2 [Setup required](#setup-required)
-2. [Documentation](#documentation)  
-    2.1 [Example](#example)  
-    2.2 [Inference](#inference)  
-    2.3 [Infilling](#infilling)  
-3. [Android](#importing-in-android)
-
-> [!NOTE]
-> Now with support for Llama 3, Phi-3, and flash attention
-
-## Quick Start
-
-Access this library via Maven:
-
-```xml
-<dependency>
-    <groupId>com.johnsnowlabs.ml</groupId>
-    <artifactId>llama</artifactId>
-    <version>3.2.1</version>
-</dependency>
-```
-
-There are multiple [examples](src/test/java/examples):
-
-### No Setup required
-
-We support CPU inference for the following platforms out of the box:
-
-- Linux x86-64, aarch64
-- MacOS x86-64, aarch64 (M1)
-- Windows x86-64, x64, arm (32 bit)
-
-If any of these match your platform, you can include the Maven dependency and get started.
-
-### Setup required
-
-If none of the above listed platforms matches yours, currently you have to compile the library yourself (also if you 
-want GPU acceleration, see below).
-
-This requires:
-
-- Git
-- A C++11 conforming compiler
-- The [cmake](https://www.cmake.org/) build system
-- Java, Maven, and setting [JAVA_HOME](https://www.baeldung.com/java-home-on-windows-7-8-10-mac-os-x-linux)
-
-Make sure everything works by running
-
-```
-g++ -v  # depending on your compiler
-java -version
-mvn -v
-echo $JAVA_HOME # for linux/macos
-echo %JAVA_HOME% # for windows
-```
-
-Then, checkout [llama.cpp](https://github.com/ggerganov/llama.cpp) to know which build arguments to use (e.g. for CUDA support).
-Finally, you have to run following commands in the directory of this repository (java-llama.cpp).
-Remember to add your build arguments in the fourth line (`cmake ..`):
+### Publish locally
 
 ```shell
-mvn compile
-mkdir build
-cd build
-cmake .. # add any other arguments for your backend
-cmake --build . --config Release
+sbt publishLocal
 ```
+
+### Publish on Maven
+
+Standalone:
+
+CPU
+
+```shell
+sbt +publishSigned 
+sbt sonatypeRelease
+```
+
+GPU
+
+```shell
+sbt -Dis_gpu=true +publishSigned
+sbt sonatypeRelease
+```
+
+M1
+
+```shell
+sbt -Dis_m1=true +publishSigned
+sbt sonatypeRelease
+```
+
+aarch64 - ARM
+
+```shell
+sbt -Dis_aarch64=true +publishSigned
+sbt sonatypeRelease
+```
+
+All at once:
+
+```shell
+sbt -mem 4096 clean && sbt +publishSigned && sbt -Dis_gpu=true +publishSigned && sbt -Dis_m1=true +publishSigned && sbt -Dis_aarch64=true +publishSigned
+sbt sonatypeRelease
+```
+
+
+
+## Custom Compilation
+
+TODO: Just provide a Docker image. And move the section below.
 
 > [!TIP]
 > Use `-DLLAMA_CURL=ON` to download models via Java code using `ModelParameters#setModelUrl(String)`.
@@ -113,16 +88,27 @@ For compiling `llama.cpp`, refer to the official [readme](https://github.com/gge
 The library can be built with the `llama.cpp` project:
 
 ```shell
-mkdir build
-cd build
-cmake .. -DBUILD_SHARED_LIBS=ON  # add any other arguments for your backend
-cmake --build . --config Release
+sbt -Dis_gpu=true compile
+```
+
+Example for CUDA Support:
+
+```shell
+mvn compile && mkdir -p build && cd build && cmake .. -DLLAMA_CUDA=ON && cmake --build . --config Debug && cd .. && mvn package
 ```
 
 Look for the shared library in `build`.
 
 > [!IMPORTANT]
 > If you are running MacOS with Metal, you have to put the file `ggml-metal.metal` from `build/bin` in the same directory as the shared library.
+
+### Debug Build
+
+To build llama.cpp with debug symbols, use the following commands:
+
+```shell
+mvn compile && mkdir -p build && cd build && cmake .. -DLLAMA_CUDA=ON -DLLAMA_DEBUG=1 -DCMAKE_BUILD_TYPE=Debug  && cmake --build . --config Debug && cd .. && mvn package
+```
 
 ## Documentation
 
@@ -171,7 +157,7 @@ Also have a look at the other [examples](src/test/java/examples).
 
 ### Inference
 
-There are multiple inference tasks. In general, `LlamaModel` is stateless, i.e., you have to append the output of the 
+There are multiple inference tasks. In general, `LlamaModel` is stateless, i.e., you have to append the output of the
 model to your prompt in order to extend the context. If there is repeated content, however, the library will internally
 cache this, to improve performance.
 
@@ -202,7 +188,7 @@ You can simply set `InferenceParameters#setInputPrefix(String)` and `InferencePa
 
 ### Model/Inference Configuration
 
-There are two sets of parameters you can configure, `ModelParameters` and `InferenceParameters`. Both provide builder 
+There are two sets of parameters you can configure, `ModelParameters` and `InferenceParameters`. Both provide builder
 classes to ease configuration. `ModelParameters` are once needed for loading a model, `InferenceParameters` are needed
 for every inference task. All non-specified options have sensible defaults.
 
@@ -212,9 +198,9 @@ ModelParameters modelParams = new ModelParameters()
         .setLoraAdapter("/path/to/lora/adapter")
         .setLoraBase("/path/to/lora/base");
 String grammar = """
-		root  ::= (expr "=" term "\\n")+
-		expr  ::= term ([-+*/] term)*
-		term  ::= [0-9]""";
+  root  ::= (expr "=" term "\\n")+
+  expr  ::= term ([-+*/] term)*
+  term  ::= [0-9]""";
 InferenceParameters inferParams = new InferenceParameters("")
         .setGrammar(grammar)
         .setTemperature(0.8);
@@ -226,11 +212,11 @@ try (LlamaModel model = new LlamaModel(modelParams)) {
 ### Logging
 
 Per default, logs are written to stdout.
-This can be intercepted via the static method `LlamaModel.setLogger(LogFormat, BiConsumer<LogLevel, String>)`. 
+This can be intercepted via the static method `LlamaModel.setLogger(LogFormat, BiConsumer<LogLevel, String>)`.
 There is text- and JSON-based logging. The default is JSON.
 Note, that text-based logging will include additional output of the GGML backend, while JSON-based logging
 only provides request logs (while still writing GGML messages to stdout).
-To only change the log format while still writing to stdout, `null` can be passed for the callback. 
+To only change the log format while still writing to stdout, `null` can be passed for the callback.
 Logging can be disabled by passing an empty callback.
 
 ```java

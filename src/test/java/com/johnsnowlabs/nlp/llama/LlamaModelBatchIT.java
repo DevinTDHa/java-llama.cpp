@@ -30,12 +30,11 @@ public class LlamaModelBatchIT {
             .setNBatch(maxBatchSize)
             .setSeed(seed)
             .setNCtx(n_ctx)
-            .setModelFilePath("/home/ducha/Workspace/building/java-llama.cpp/models/codellama-7b.Q2_K.gguf")
+            .setModelFilePath("models/codellama-7b.Q2_K.gguf")
             .setContinuousBatching(true);
 
     @BeforeClass
     public static void setup() {
-//        LlamaModel.setLogger((level, msg) -> System.out.println(level + ": " + msg));
         model = new LlamaModel(modelParams);
     }
 
