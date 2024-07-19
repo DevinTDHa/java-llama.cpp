@@ -31,12 +31,15 @@ autoScalaLibrary := false // exclude scala-library from dependencies
 licenses += "Apache-2.0" -> url("http://opensource.org/licenses/Apache-2.0")
 (ThisBuild / resolvers) += "Another Maven" at "https://mvnrepository.com/artifact/"
 
+// For Debugging Purposes
+//logLevel := Level.Debug
+
 // Note: Maven needs to be available
 // Compile Tasks
 val compileLlamaCpp = taskKey[Unit]("Compile llama.cpp")
 compileLlamaCpp := {
   val log = streams.value.log
-  val cmakeFlags = if (is_gpu) "-DLLAMA_CUDA=ON" else "" // Addiitonal flags for llama.cpp
+  val cmakeFlags = if (is_gpu) "-DLLAMA_CUDA=ON" else "" // Additional flags for llama.cpp
   // Run the cmake commands
   val compileExitCode =
     s"mvn compile" #&& "mkdir -p build" #&& s"cmake -B build $cmakeFlags" #&& "cmake --build build --config Release" // Adjust this to your specific CMake command
@@ -64,12 +67,14 @@ testLlamaCpp := {
 (Test / test) := testLlamaCpp.value
 
 // Maven Clean
-val mavenClean = taskKey[Unit]("Clean using maven")
+val mavenClean = taskKey[Unit]("Clean maven and cmake")
 mavenClean := {
   val log = streams.value.log
-  val cleanExitCode = s"mvn clean".!
-  if (cleanExitCode != 0) {
-    throw new Exception(s"mvn clean: Maven clean failed with exit code $cleanExitCode")
+  val mvnCleanExitCode = s"mvn clean".!
+  val buildCleanExitCode = s"rm -rf build".!
+  val cleanLibsExitCode = s"rm -rf src/main/resources/com/johnsnowlabs/nlp/llama/".!
+  if (mvnCleanExitCode != 0 || buildCleanExitCode != 0) {
+    throw new Exception(s"Clean maven and cmake: Some tasks failed.")
   }
 }
 // Clean commands in sbt depend on llama.cpp clean
