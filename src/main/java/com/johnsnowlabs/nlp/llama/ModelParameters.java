@@ -125,7 +125,7 @@ public final class ModelParameters extends JsonParameters {
 	}
 
 	/**
-	 * Set the logical batch size for prompt processing (must be >=32 to use BLAS)
+	 * Set the logical batch size for prompt processing (must be greater equal 32 to use BLAS)
 	 */
 	public ModelParameters setNBatch(int nBatch) {
 		parameters.put(PARAM_N_BATCH, String.valueOf(nBatch));
@@ -133,7 +133,7 @@ public final class ModelParameters extends JsonParameters {
 	}
 
 	/**
-	 * Set the physical batch size for prompt processing (must be >=32 to use BLAS)
+	 * Set the physical batch size for prompt processing (must be greater equal 32 to use BLAS)
 	 */
 	public ModelParameters setNUbatch(int nUbatch) {
 		parameters.put(PARAM_N_UBATCH, String.valueOf(nUbatch));
