@@ -17,12 +17,12 @@ given, release for cpu is assumed.
 
 ## 2. **Perform a Release in Docker**
 
-We need to prepare the four following environment variables 
+We need to prepare the four following environment variables
 (see [sbt-ci-release](https://github.com/sbt/sbt-ci-release?tab=readme-ov-file#secrets) for more details):
 
 1. `PGP_SECRET`: The base64-encoded GPG secret key.
-    - We can export the secret key with `gpg --export-secret-keys $LONG_ID | base64 -w0`, where `$LONG_ID` is the 
-    - long id of the gpg key.
+   - We can export the secret key with `gpg --export-secret-keys $LONG_ID | base64 -w0`, where `$LONG_ID` is the
+   - long id of the gpg key.
 2. `PGP_PASSPHRASE`: The passphrase for the GPG key.
    - Passphrase you use to unlock your GPG key.
 3. `SONATYPE_USERNAME`: The username/token for Sonatype.
@@ -45,9 +45,26 @@ your `sbt` project.
 
 ### GPU
 
-For the GPU release, we need to use the `manylinux-gpu.Dockerfile`. TODO
+For the GPU release, we need to use the `manylinux-gpu.Dockerfile`:
+
+```bash
+docker build -t jslllama:gpu -f docker/manylinux-gpu.Dockerfile .
+```
+
+Then, wen running docker run, we need to specify it to use gpus:
+
+```bash
+docker run \
+   -e PGP_PASSPHRASE="$PGP_PASSPHRASE" \
+   -e PGP_SECRET="$PGP_SECRET" \
+   -e SONATYPE_USERNAME="$SONATYPE_USERNAME" \
+   -e SONATYPE_PASSWORD="$SONATYPE_PASSWORD" \
+   --gpus all \
+   jslllama:gpu
+```
 
 ### Other Platforms
+
 For M1:
 
 ```bash
@@ -59,4 +76,3 @@ For AARCH64:
 ```bash
 docker run $ENV_VARS jslllama:latest -Dis_aarch64=true
 ```
-

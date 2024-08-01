@@ -19,7 +19,7 @@ name := {
 }
 
 organization := "com.johnsnowlabs.nlp"
-version := "0.1.0-SNAPSHOT"
+version := "0.1.0-rc1-SNAPSHOT"
 scalaVersion := scala212
 
 // Java Configuration
